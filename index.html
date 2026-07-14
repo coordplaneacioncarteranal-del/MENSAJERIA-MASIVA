@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Conversión y Recaudo Mensajería Masiva</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .spinner {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #2b5cb3;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .card {
+            background: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 4px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #2b5cb3;
+            transition: width 1s ease-out;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .chart-container-tall {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .progress-bar-mini {
+            height: 6px;
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            overflow: hidden;
+            width: 100%;
+        }
+        
+        .progress-fill-mini {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.8s ease-out;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="text-center">
+            <div class="spinner mx-auto mb-4"></div>
+            <p class="text-white text-xl font-semibold">Cargando y procesando Hoja de Cálculo...</p>
+            <p class="text-slate-300 text-sm mt-2">Por favor espere...</p>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden">
+        
+        <header class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row gap-4 border-b border-slate-200 pb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                    <span class="w-2.5 h-7 bg-[#2b5cb3] rounded-full inline-block"></span>
+                    Dashboard Mensajería Masiva
+                </h1>
+                <p class="text-slate-500 text-sm mt-0.5">Análisis operativo y financiero con auditoría de tendencia por fecha de pago</p>
+            </div>
+            <div class="flex gap-3">
+                <div class="bg-slate-800 text-white px-4 py-2 rounded-xl shadow-sm border border-slate-700 text-right">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Último Cierre vs Penúltimo</p>
+                    <p class="text-xs font-mono font-bold" id="cruceFechas">Detectando fechas...</p>
+                </div>
+                <div class="bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-100 text-right">
+                    <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Última actualización</p>
+                    <p class="text-xs font-semibold text-slate-700" id="lastUpdate"></p>
+                </div>
+            </div>
+        </header>
+
+        <section class="mb-8 p-6 bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-2xl shadow-sm">
+            <div class="border-b border-slate-200 pb-3 mb-5">
+                <span class="bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider shadow-sm">Atribución de Efectividad</span>
+                <h2 class="text-xl font-extrabold mt-2 text-slate-800">Análisis por Tiempos de Pago</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Tarjeta 0 a 7 días -->
+                <div class="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm flex flex-col">
+                    <span class="text-xs text-emerald-700 font-bold uppercase tracking-wider block mb-2">Pagos entre 0 a 7 días después del envío</span>
+                    <div class="flex justify-between items-end mt-2">
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold mb-1">Recaudo Efectivo</p>
+                            <p class="text-3xl font-black text-emerald-600" id="recaudo0a7">$0</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 font-semibold mb-1">Efectividad</p>
+                            <p class="text-2xl font-bold text-emerald-700" id="efectividad0a7">0%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between">
+                        <span class="text-xs font-semibold text-slate-500">Cantidad de Pagos: <strong class="text-slate-700" id="conteoPagos0a7">0</strong></span>
+                    </div>
+                </div>
+
+                <!-- Tarjeta > 7 días -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                    <span class="text-xs text-slate-600 font-bold uppercase tracking-wider block mb-2">Pagos después de 7 días del envío (Dato Estadístico)</span>
+                    <div class="flex justify-between items-end mt-2">
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold mb-1">Recaudo Tardío</p>
+                            <p class="text-3xl font-black text-slate-700" id="recaudoMayor7">$0</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 font-semibold mb-1">Efectividad Tardía</p>
+                            <p class="text-2xl font-bold text-slate-600" id="efectividadMayor7">0%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between">
+                        <span class="text-xs font-semibold text-slate-500">Cantidad de Pagos: <strong class="text-slate-700" id="conteoPagosMayor7">0</strong></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-8">
+            <div class="border-b border-slate-200 pb-2 mb-4 flex justify-between items-center">
+                <h2 class="text-xs font-black text-slate-400 tracking-wider uppercase">Recaudo General de la mensajería enviada</h2>
+                <span class="text-xs text-slate-500 font-medium">Variación respecto al reporte del día anterior</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card p-5 bg-white">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Recaudo Actual Total</h3>
+                        <span class="text-[10px] font-black text-[#2b5cb3] bg-blue-50 px-2 py-0.5 rounded-md uppercase">Macro</span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-800" id="totalRecaudoActual">$0</p>
+                    <div class="text-[11px] mt-1 font-semibold" id="diffRecaudoGlobal">Cargando variación...</div>
+                </div>
+
+                <div class="card p-5 bg-white">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Presupuesto Inicial (Cuota)</h3>
+                        <span class="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md uppercase">Base</span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-800" id="totalRecaudoEsperado">$0</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Suma real de la columna Cuota completa</p>
+                </div>
+
+                <div class="card p-5 bg-white">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Conversión General</h3>
+                        <span class="text-[10px] font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md uppercase">Efectividad</span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-800" id="conversionGeneral">0%</p>
+                    <div class="text-[11px] mt-1 font-semibold" id="diffConversionGlobal">Cargando variación...</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 mb-6">
+                <div class="card p-5">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">📈 Curva de Recaudo Diario Acumulado (Evolución por Fecha de Pago)</h3>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="chartTendenciaDiaria"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Recaudo por Medio de Pago</h3>
+                    <div class="chart-container">
+                        <canvas id="chartMedioPago"></canvas>
+                    </div>
+                </div>
+
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Recaudo por Regional</h3>
+                    <div class="chart-container">
+                        <canvas id="chartRegional"></canvas>
+                    </div>
+                </div>
+
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Recaudo por Número de Cuotas</h3>
+                    <div class="overflow-y-auto" style="max-height: 300px;">
+                        <table class="min-w-full text-xs">
+                            <thead class="bg-slate-100 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-3 py-2 text-left font-bold text-slate-600 text-[10px] uppercase tracking-wider rounded-tl-lg">Categoría</th>
+                                    <th class="px-3 py-2 text-right font-bold text-slate-600 text-[10px] uppercase tracking-wider">Recaudo</th>
+                                    <th class="px-3 py-2 text-center font-bold text-slate-600 text-[10px] uppercase tracking-wider rounded-tr-lg">%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaCategoriaBody" class="divide-y divide-slate-100">
+                            </tbody>
+                            <tfoot class="bg-slate-200 font-bold sticky bottom-0">
+                                <tr>
+                                    <td class="px-3 py-2.5 text-slate-800 text-xs rounded-bl-lg">TOTAL</td>
+                                    <td class="px-3 py-2.5 text-right text-[#2b5cb3] font-black text-xs" id="totalRecaudoCategoria">$0</td>
+                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs rounded-br-lg">100%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card p-6 md:col-span-2">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Cuota vs Pago Actual por Regional</h3>
+                    <div class="chart-container-tall">
+                        <canvas id="chartComparativa"></canvas>
+                    </div>
+                </div>
+
+                <div class="card p-6 md:col-span-1">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Mensajes Enviados VS Mensajes Pagos</h3>
+                    <div class="chart-container-tall">
+                        <canvas id="chartEmbudo"></canvas>
+                    </div>
+                    
+                    <div class="mt-6 space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 border border-slate-200 rounded-xl shadow-sm">
+                            <span class="text-xs font-semibold text-slate-600">Mensajes Enviados Generales</span>
+                            <span class="text-lg font-bold text-slate-800" id="totalMensajes">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl shadow-sm">
+                            <span class="text-xs font-semibold text-indigo-700">Prom. Env. por Contrato</span>
+                            <span class="text-lg font-bold text-indigo-800" id="promedioPorContrato">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm">
+                            <span class="text-xs font-semibold text-[#2b5cb3]">Pagos Realizados Globales</span>
+                            <span class="text-lg font-bold text-[#2b5cb3]" id="totalPagos">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="mb-8 p-6 bg-gradient-to-br from-[#eef4ff] to-[#d9e7ff] border border-[#bcd4ff] rounded-2xl shadow-sm text-slate-800">
+            <div class="pb-3 mb-5 flex justify-between items-center flex-wrap gap-2 border-b border-[#bcd4ff]/50">
+                <div>
+                    <span class="bg-[#2b5cb3] text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider shadow-sm">Métrica Prioritaria</span>
+                    <h2 class="text-xl font-extrabold mt-2 text-[#1a3d80]">Mensajería con Promoción 10% (Pagos 2 Cuotas o Más)</h2>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-xl border border-[#bcd4ff] shadow-sm">
+                    <span class="text-xs text-[#4a6fa5] font-bold uppercase tracking-wider block mb-1">Recaudo Parcial  (>= 2 Cuotas)</span>
+                    <p class="text-2xl font-black text-[#2b5cb3]" id="espRecaudoLogrado">$0</p>
+                    <div class="text-[10px] mt-1 font-bold" id="diffRecaudoEspecial">Calculando incremento...</div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-[#bcd4ff] shadow-sm">
+                    <span class="text-xs text-[#4a6fa5] font-bold uppercase tracking-wider block mb-1">Meta Establecida</span>
+                    <p class="text-2xl font-black text-slate-800">$ 628.692.642</p>
+                    <span class="text-[10px] text-slate-400 block mt-1">Objetivo fijo asignado</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-[#b2ccff] bg-gradient-to-br from-white to-[#f0f5ff] shadow-sm">
+                    <span class="text-xs text-[#4a6fa5] font-bold uppercase tracking-wider block mb-1">% Cumplimiento Obj</span>
+                    <p class="text-2xl font-black text-[#1a3d80]" id="espPorcentajeCumplimiento">0%</p>
+                    <div class="progress-bar mt-2 bg-slate-200">
+                        <div class="progress-fill" id="espProgressCumplimiento" style="width: 0%; background: #2b5cb3"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-[#bcd4ff] shadow-sm flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs text-[#4a6fa5] font-bold uppercase tracking-wider block mb-1">Control de Mensajes</span>
+                        <div class="flex justify-between items-baseline">
+                            <p class="text-2xl font-black text-slate-800" id="dinEnviados">0</p>
+                            <p class="text-xs font-semibold text-slate-400">Meta: 43.904</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 border-t border-slate-100 pt-1.5 flex justify-between items-center text-[11px]">
+                        <span class="text-slate-500">Faltan: <strong class="text-orange-600 font-bold" id="dinFaltantes">0</strong></span>
+                        <span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-bold" id="dinPorcentaje">0% Env.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 bg-white/80 backdrop-blur-sm p-5 rounded-xl border border-[#bcd4ff] shadow-inner">
+                <div>
+                    <h3 class="text-xs font-black text-[#2b5cb3] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-slate-200 pb-2.5 pt-2">
+                        <span>📊 Recaudo por numero de cuotas</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs text-left text-slate-700">
+                            <thead class="bg-slate-100 text-[10px] uppercase tracking-wider text-slate-500">
+                                <tr>
+                                    <th class="px-3 py-2.5 font-bold rounded-l-lg">Categoría</th>
+                                    <th class="px-3 py-2.5 font-bold text-center">Pagos</th>
+                                    <th class="px-3 py-2.5 font-bold text-right rounded-r-lg">Monto Recaudado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaEspCategoriaBody" class="divide-y divide-slate-100 font-medium">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-black text-[#2b5cb3] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-slate-200 pb-2.5 pt-2">
+                        <span>💳 Recaudo Parcial por Medio de Pago</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs text-left text-slate-700">
+                            <thead class="bg-slate-100 text-[10px] uppercase tracking-wider text-slate-500">
+                                <tr>
+                                    <th class="px-2 py-2.5 font-bold rounded-l-lg">Medio</th>
+                                    <th class="px-2 py-2.5 font-bold text-center">Env.</th>
+                                    <th class="px-2 py-2.5 font-bold text-center">Pag.</th>
+                                    <th class="px-2 py-2.5 font-bold text-center text-purple-700">% Efec.</th>
+                                    <th class="px-2 py-2.5 font-bold text-right rounded-r-lg">Monto Rec.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaEspMedioPagoBody" class="divide-y divide-slate-100 font-medium">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-black text-[#2b5cb3] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-slate-200 pb-2.5 pt-2">
+                        <span>📍 Recaudo Parcial por Regional</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs text-left text-slate-700">
+                            <thead class="bg-slate-100 text-[10px] uppercase tracking-wider text-slate-500">
+                                <tr>
+                                    <th class="px-2 py-2.5 font-bold rounded-l-lg">Regional</th>
+                                    <th class="px-2 py-2.5 font-bold text-center">Env.</th>
+                                    <th class="px-2 py-2.5 font-bold text-center">Pag.</th>
+                                    <th class="px-2 py-2.5 font-bold text-center text-purple-700">% Efec.</th>
+                                    <th class="px-2 py-2.5 font-bold text-right rounded-r-lg">Monto Rec.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaEspRegionalBody" class="divide-y divide-slate-100 font-medium">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="mb-8 p-6 bg-gradient-to-br from-[#e8f5e9] to-[#c8e6c9] border border-[#81c784] rounded-2xl shadow-sm text-slate-800">
+            <div class="pb-3 mb-5 flex justify-between items-center flex-wrap gap-2 border-b border-[#81c784]/50">
+                <div>
+                    <span class="bg-green-700 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider shadow-sm">Período Específico</span>
+                    <h2 class="text-xl font-extrabold mt-2 text-green-900">Mensajería con Pago Adelantados - Julio 2026 en Adelante</h2>
+                    <p class="text-sm text-green-800 mt-1">Recaudo y efectividad filtrado por columna K ("ADELANTADOS") separando por cuotas</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white p-5 rounded-xl border border-green-300 shadow-sm">
+                    <span class="text-xs text-green-700 font-bold uppercase tracking-wider block mb-1">Total Recaudado Adelantados</span>
+                    <p class="text-3xl font-black text-green-700" id="julio2026TotalRecaudo">$0</p>
+                    <div class="text-[10px] mt-1 font-bold" id="diffRecaudoAdelantados">Calculando variación...</div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-indigo-200 shadow-sm bg-gradient-to-br from-white to-indigo-50/30">
+                    <span class="text-xs text-indigo-700 font-bold uppercase tracking-wider block mb-1">Recaudo Adelantados (>= 2 Cuotas)</span>
+                    <p class="text-3xl font-black text-indigo-700" id="julio2026RecaudoMasDos">$0</p>
+                    <span class="text-[10px] text-indigo-500 font-medium block mt-1">Filtrado estricto de clientes con 2 cuotas o más</span>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-amber-200 shadow-sm bg-gradient-to-br from-white to-amber-50/30">
+                    <span class="text-xs text-amber-700 font-bold uppercase tracking-wider block mb-1">Recaudo Adelantados (&lt; 2 Cuotas)</span>
+                    <p class="text-3xl font-black text-amber-600" id="julio2026RecaudoMenosDos">$0</p>
+                    <span class="text-[10px] text-amber-500 font-medium block mt-1">Clientes adelantados con menos de 2 cuotas</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-xl border border-[#81c784] shadow-sm flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs text-green-800 font-bold uppercase tracking-wider block mb-1">Control de Mensajes</span>
+                        <div class="flex justify-between items-baseline">
+                            <p class="text-2xl font-black text-slate-800" id="julio2026TotalEnviados">0</p>
+                            <p class="text-xs font-semibold text-slate-400">Meta: 41.026</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 border-t border-slate-100 pt-1.5">
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span class="text-slate-500">Cumplimiento / Efectividad:</span>
+                            <strong class="text-green-700 font-bold" id="julio2026CumplimientoMensajes">0%</strong>
+                        </div>
+                        <div class="progress-bar bg-slate-100">
+                            <div class="progress-fill bg-green-600" id="julio2026ProgressMensajes" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-[#81c784] shadow-sm flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs text-green-800 font-bold uppercase tracking-wider block mb-1">Total Pagos Realizados</span>
+                        <p class="text-2xl font-black text-green-700" id="julio2026TotalPagos">0</p>
+                        <span class="text-[10px] text-slate-400 block mt-2">Transacciones efectivas registradas</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-[#81c784] bg-gradient-to-br from-white to-[#f0fff4] shadow-sm flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs text-green-800 font-bold uppercase tracking-wider block mb-1">Conversión Interna</span>
+                        <p class="text-2xl font-black text-green-600" id="julio2026Efectividad">0%</p>
+                        <span class="text-[10px] text-slate-400 block mt-2">Tasa de efectividad Mensajes → Pagos</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-white/80 backdrop-blur-sm p-5 rounded-xl border border-[#81c784] shadow-inner">
+                <div>
+                    <h3 class="text-xs font-black text-green-800 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-green-200 pb-2.5 pt-2">
+                        <span>📊 Recaudo por Número de Cuotas</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs text-left text-slate-700">
+                            <thead class="bg-green-50 text-[10px] uppercase tracking-wider text-green-800">
+                                <tr>
+                                    <th class="px-3 py-2.5 font-bold rounded-l-lg">Categoría</th>
+                                    <th class="px-3 py-2.5 font-bold text-right rounded-r-lg">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaJulio2026Cuotas" class="divide-y divide-green-100 font-medium">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-black text-green-800 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-green-200 pb-2.5 pt-2">
+                        <span>💳 Por Medio de Pago</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs text-left text-slate-700">
+                            <thead class="bg-green-50 text-[10px] uppercase tracking-wider text-green-800">
+                                <tr>
+                                    <th class="px-2 py-2.5 font-bold rounded-l-lg">Medio</th>
+                                    <th class="px-2 py-2.5 font-bold text-center">Env.</th>
+                                    <th class="px-2 py-2.5 font-bold text-center">Pag.</th>
+                                    <th class="px-2 py-2.5 font-bold text-center text-green-800">% Efec.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaJulio2026Medios" class="divide-y divide-green-100 font-medium">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-black text-green-800 uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-green-200 pb-2.5 pt-2">
+                        <span>📍 Por Regional</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs text-left text-slate-700">
+                            <thead class="bg-green-50 text-[10px] uppercase tracking-wider text-green-800">
+                                <tr>
+                                    <th class="px-2 py-2.5 font-bold rounded-l-lg">Regional</th>
+                                    <th class="px-2 py-2.5 font-bold text-center">Env.</th>
+                                    <th class="px-2 py-2.5 font-bold text-center">Pag.</th>
+                                    <th class="px-2 py-2.5 font-bold text-center text-green-800">% Efec.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaJulio2026Regional" class="divide-y divide-green-100 font-medium">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-8 p-6 bg-slate-100 border border-slate-300 rounded-2xl shadow-inner">
+            <div class="border-b border-slate-300 pb-4 mb-6">
+                <span class="bg-indigo-600 text-white text-xs font-bold uppercase px-3 py-1 rounded-full">Sección Especial</span>
+                <h2 class="text-3xl font-bold text-slate-800 mt-2">Mensajeria Actualiza datos promocion 10% 2 cuotas o mas</h2>
+                <p class="text-slate-600 text-sm">Comportamiento de pago de los mensajes especiales de clientes actualizados</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card bg-white border border-green-300 p-5 flex flex-col justify-between shadow-sm">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-green-700 uppercase tracking-wider">Recaudo Objetivo</span>
+                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded">Actualizados >= 2</span>
+                        </div>
+                        <p class="text-3xl font-black text-[#2b5cb3] my-2" id="kpiSumaActualizadosMasDos">$0</p>
+                        <p class="text-xs text-slate-500 font-medium">Monto total recolectado de usuarios actualizados con 2 o más cuotas pagadas.</p>
+                    </div>
+                </div>
+
+                <div class="card bg-white border border-amber-300 p-5 flex flex-col justify-between shadow-sm">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-amber-700 uppercase tracking-wider">Recaudo Menor</span>
+                            <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-0.5 rounded">Actualizados &lt; 2</span>
+                        </div>
+                        <p class="text-3xl font-black text-amber-600 my-2" id="kpiSumaActualizadosMenosDos">$0</p>
+                        <p class="text-xs text-slate-500 font-medium">Monto total recolectado de usuarios actualizados con menos de 2 cuotas pagadas.</p>
+                    </div>
+                </div>
+
+                <div class="card bg-gradient-to-br from-white to-indigo-50/50 border border-indigo-300 p-5 flex flex-col justify-between shadow-sm">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Volumen de Gestión</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2 py-0.5 rounded">Total Base</span>
+                        </div>
+                        <p class="text-3xl font-black text-[#2b5cb3] my-2" id="kpiTotalActualizadosGlobal">0</p>
+                        <p class="text-xs text-slate-500 font-medium">Cantidad total de registros que se encuentran en estado ACTUALIZADO.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                <div class="card p-6 bg-white border border-slate-200 shadow-sm xl:col-span-2">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">Resultado por Medio de Pago (Cruce Especial)</h3>
+                        <p class="text-xs text-slate-500">Métricas avanzadas que calculan la efectividad de conversión total integrando el desempeño de ambos segmentos</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm text-left text-slate-600">
+                            <thead class="bg-slate-100 text-xs text-slate-700 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-4 py-3 font-semibold rounded-l-lg">Medio de Pago</th>
+                                    <th class="px-4 py-3 font-semibold text-center">Total Mensajes</th>
+                                    <th class="px-4 py-3 font-semibold text-center text-indigo-700">Actualizados (>=2)</th>
+                                    <th class="px-4 py-3 font-semibold text-center text-amber-700">Actualizados (&lt;2)</th>
+                                    <th class="px-4 py-3 font-semibold text-center text-purple-700 bg-purple-50/50">% Efectividad Total</th>
+                                    <th class="px-4 py-3 font-semibold text-right text-indigo-700">Recaudo (>=2)</th>
+                                    <th class="px-4 py-3 font-semibold text-right text-amber-700 rounded-r-lg">Recaudo (&lt;2)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMedioPagoBody" class="divide-y divide-slate-100 font-medium">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card p-6 bg-white border border-slate-200 shadow-sm col-span-1">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">📍 Actualizados por Regional</h3>
+                        <p class="text-xs text-slate-500">Distribución volumétrica total de registros en estado ACTUALIZADO por cada zona</p>
+                    </div>
+                    <div class="overflow-x-auto" style="max-height: 334px;">
+                        <table class="min-w-full text-xs text-left text-slate-700">
+                            <thead class="bg-slate-100 text-[10px] uppercase tracking-wider text-slate-500 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-3 py-2.5 font-bold rounded-l-lg">Regional</th>
+                                    <th class="px-3 py-2.5 font-bold text-center rounded-r-lg">Total Actualizados</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaEspRegionalActualizadosBody" class="divide-y divide-slate-100 font-semibold">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 mt-6">
+                <div class="card p-6 bg-white border border-slate-200">
+                    <h3 class="text-lg font-semibold text-slate-700 mb-4">Distribución Visual de Mensajes (Columna I)</h3>
+                    <div class="chart-container" style="height: 240px;">
+                        <canvas id="chartResultado"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSYgitljjICa1hyaX1iOrAsjg-RFyM8ruiRDuww6mBL1CRalpXu06l8b-3rQvOofdz4MIXX7PmHymam/pub?output=csv';
+        
+        let chartInstances = {};
+        let rawData = [];
+
+        function normalizeString(str) {
+            if (!str) return 'SIN ASIGNAR';
+            return str.toString().trim() || 'SIN ASIGNAR';
+        }
+
+        function parseNumber(value) {
+            if (value === null || value === undefined || value === '') return 0;
+            let strValue = value.toString().trim().replace(/[\$\s]/g, '');
+            let lastComma = strValue.lastIndexOf(',');
+            let lastDot = strValue.lastIndexOf('.');
+            if (lastComma > lastDot) {
+                strValue = strValue.replace(/\./g, '').replace(',', '.');
+            } else if (lastDot > lastComma) {
+                strValue = strValue.replace(/,/g, '');
+            } else {
+                strValue = strValue.replace(/,/g, '');
+            }
+            const num = parseFloat(strValue);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+        }
+
+        function formatNumber(value) { return new Intl.NumberFormat('es-CO').format(value); }
+        function getCurrentDateTime() { return new Date().toLocaleString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+
+        function formatBadgeVariation(diff, isPercentage = false) {
+            if (diff > 0) {
+                return `<span class="text-emerald-600 font-bold">▲ +${isPercentage ? diff.toFixed(2)+'%' : formatCurrency(diff)}</span>`;
+            } else if (diff < 0) {
+                return `<span class="text-rose-600 font-bold">▼ ${isPercentage ? diff.toFixed(2)+'%' : formatCurrency(diff)}</span>`;
+            }
+            return `<span class="text-slate-400">● Sin cambios</span>`;
+        }
+
+        function mapColumns(headers) {
+            const h = headers.map(x => (x || '').toString().trim().toUpperCase());
+            return { 
+                medioPago: h.indexOf('MEDIO DE PAGO'),       
+                idContrato: h.indexOf('IDCONTRATO'),      
+                regional: h.indexOf('REGIONAL'),        
+                pagoActual: h.indexOf('PAGO'),      
+                fechaPago: h.indexOf('FECHA DE PAGO'),       
+                cuota: h.indexOf('CUOTA'),           
+                cuotasPagadas: h.indexOf('CUOTAS QUE PAGARON'),   
+                categoria: h.indexOf('CATEGORIA'),       
+                resultado: h.indexOf('ACTUALIZADO'),       
+                mesPagoH: h.indexOf('MES PAGO HASTA'),
+                tipoDeEnvio: h.indexOf('TIPO DE MENSAJE'),
+                diasPago: h.indexOf('DIAS DE PAGO')
+            };
+        }
+
+
+        function processData(data, columnMap) {
+            return data.map(row => {
+                const diasPagoRaw = columnMap.diasPago !== -1 ? row[columnMap.diasPago] : '';
+                const diasPagoNum = parseFloat(diasPagoRaw ? diasPagoRaw.toString().trim() : 'NaN');
+                const esPagoEfectivo = !isNaN(diasPagoNum) && diasPagoNum >= 0 && diasPagoNum <= 7;
+                const esPagoTardio = !isNaN(diasPagoNum) && diasPagoNum > 7;
+
+                return {
+                    medioPago: columnMap.medioPago !== -1 ? normalizeString(row[columnMap.medioPago]) : 'SIN ASIGNAR',
+                    idContrato: columnMap.idContrato !== -1 ? normalizeString(row[columnMap.idContrato]) : 'SIN ASIGNAR',
+                    regional: columnMap.regional !== -1 ? normalizeString(row[columnMap.regional]) : 'SIN ASIGNAR',
+                    categoria: columnMap.categoria !== -1 ? normalizeString(row[columnMap.categoria]) : 'SIN ASIGNAR',
+                    resultado: columnMap.resultado !== -1 ? normalizeString(row[columnMap.resultado]) : 'SIN ASIGNAR',
+                    fechaPago: columnMap.fechaPago !== -1 ? normalizeString(row[columnMap.fechaPago]) : '0',
+                    cuotasPagadas: columnMap.cuotasPagadas !== -1 ? parseNumber(row[columnMap.cuotasPagadas]) : 0,
+                    cuota: columnMap.cuota !== -1 ? parseNumber(row[columnMap.cuota]) : 0,
+                    pagoActual: columnMap.pagoActual !== -1 ? parseNumber(row[columnMap.pagoActual]) : 0,
+                    mesPagoH: columnMap.mesPagoH !== -1 ? normalizeString(row[columnMap.mesPagoH]) : '', 
+                    tipoDeEnvio: columnMap.tipoDeEnvio !== -1 ? normalizeString(row[columnMap.tipoDeEnvio]) : 'SIN ASIGNAR',
+                    esPagoEfectivo: esPagoEfectivo,
+                    esPagoTardio: esPagoTardio
+                };
+            });
+        }
+
+
+        function calculateKPIs(data) {
+            const kpis = {
+                totalRecaudoActual: 0,
+                totalRecaudoEsperado: 0,
+                totalMensajes: 0, 
+                promedioMensajesPorContrato: 0,
+                totalPagos: 0,    
+                conversionGeneral: 0,
+                
+                recaudo0a7: 0,
+                pagos0a7: 0,
+                recaudoMayor7: 0,
+                pagosMayor7: 0,
+
+                totalGlobal: data.length,
+                metaFijaObjetivo: 628494025,
+                recaudoMayorIgualDosCuotas: 0,
+                porcentajeCumplimientoEspecial: 0,
+                
+                metaMensajesGlobal: 43904, 
+                mensajesEnviadosDin: 0, 
+                mensajesFaltantesDin: 0,
+                porcentajeEnvioDin: 0,
+                
+                recaudoActualizadosMasDos: 0,
+                recaudoActualizadosMenosDos: 0,
+                totalActualizadosGlobal: 0,
+
+                fechasOrdenadas: [],
+                ultimoReporte: { recaudoGlobal: 0, conversion: 0, recaudoEspecial: 0 },
+                penultimoReporte: { recaudoGlobal: 0, conversion: 0, recaudoEspecial: 0 },
+                recLinealChart: {} 
+            };
+
+            const timeline = {};
+            const uniqueContratos = new Set();
+            
+            data.forEach(record => {
+                kpis.totalRecaudoActual += record.pagoActual;
+                kpis.totalRecaudoEsperado += record.cuota;
+                
+                kpis.totalMensajes += 1;
+                if (record.idContrato && record.idContrato !== 'SIN ASIGNAR') {
+                    uniqueContratos.add(record.idContrato);
+                }
+
+                if (record.pagoActual > 0) {
+                    kpis.totalPagos += 1;
+                    if (record.esPagoEfectivo) {
+                        kpis.recaudo0a7 += record.pagoActual;
+                        kpis.pagos0a7 += 1;
+                    } else if (record.esPagoTardio) {
+                        kpis.recaudoMayor7 += record.pagoActual;
+                        kpis.pagosMayor7 += 1;
+                    }
+                }
+
+                // Conteo específico del segmento azul (Métrica prioritaria)
+                if (record.tipoDeEnvio === 'ANTICIPADO 0 A -10 DIAS') {
+                    kpis.mensajesEnviadosDin += 1;
+                }
+
+                const esActualizado = record.resultado === 'ACTUALIZADO';
+                if (esActualizado) kpis.totalActualizadosGlobal += 1;
+
+                if (record.cuotasPagadas >= 2) {
+                    if (record.esPagoEfectivo) kpis.recaudoMayorIgualDosCuotas += record.pagoActual;
+                    if (esActualizado) kpis.recaudoActualizadosMasDos += record.pagoActual;
+                } else {
+                    if (esActualizado) kpis.recaudoActualizadosMenosDos += record.pagoActual;
+                }
+
+                const fRaw = record.fechaPago;
+                if (fRaw && fRaw !== '0' && fRaw !== 'SIN ASIGNAR') {
+                    if (!timeline[fRaw]) {
+                        timeline[fRaw] = { recaudo: 0, mensajesSegmento: 0, pagosSegmento: 0, recaudoEsp: 0 };
+                    }
+                    timeline[fRaw].recaudo += record.pagoActual;
+                    if (record.tipoDeEnvio === 'ANTICIPADO 0 A -10 DIAS') {
+                        timeline[fRaw].mensajesSegmento += 1;
+                        if (record.pagoActual > 0) timeline[fRaw].pagosSegmento += 1;
+                    }
+                    if (record.cuotasPagadas >= 2 && record.esPagoEfectivo) {
+                        timeline[fRaw].recaudoEsp += record.pagoActual;
+                    }
+                }
+            });
+
+            const sortingFechas = Object.keys(timeline).sort((a, b) => {
+                const partsA = a.split('/');
+                const partsB = b.split('/');
+                return new Date(partsA[2], partsA[1] - 1, partsA[0]) - new Date(partsB[2], partsB[1] - 1, partsB[0]);
+            });
+
+            kpis.fechasOrdenadas = sortingFechas;
+            sortingFechas.forEach(f => {
+                kpis.recLinealChart[f] = timeline[f].recaudo;
+            });
+
+            if (sortingFechas.length >= 2) {
+                const ultimaF = sortingFechas[sortingFechas.length - 1];
+                const penultimaF = sortingFechas[sortingFechas.length - 2];
+
+                document.getElementById('cruceFechas').textContent = `${penultimaF} VS ${ultimaF}`;
+
+                kpis.ultimoReporte.recaudoGlobal = timeline[ultimaF].recaudo;
+                kpis.ultimoReporte.recaudoEspecial = timeline[ultimaF].recaudoEsp;
+                kpis.ultimoReporte.conversion = timeline[ultimaF].mensajesSegmento > 0 ? (timeline[ultimaF].pagosSegmento / timeline[ultimaF].mensajesSegmento) * 100 : 0;
+
+                kpis.penultimoReporte.recaudoGlobal = timeline[penultimaF].recaudo;
+                kpis.penultimoReporte.recaudoEspecial = timeline[penultimaF].recaudoEsp;
+                kpis.penultimoReporte.conversion = timeline[penultimaF].mensajesSegmento > 0 ? (timeline[penultimaF].pagosSegmento / timeline[penultimaF].mensajesSegmento) * 100 : 0;
+            } else {
+                document.getElementById('cruceFechas').textContent = "Esperando histórico diario...";
+            }
+
+            kpis.mensajesFaltantesDin = Math.max(0, kpis.metaMensajesGlobal - kpis.mensajesEnviadosDin);
+            if (kpis.metaMensajesGlobal > 0) {
+                kpis.porcentajeEnvioDin = (kpis.mensajesEnviadosDin / kpis.metaMensajesGlobal) * 100;
+            }
+
+            if (kpis.metaFijaObjetivo > 0) {
+                kpis.porcentajeCumplimientoEspecial = (kpis.recaudoMayorIgualDosCuotas / kpis.metaFijaObjetivo) * 100;
+            }
+            
+            // Efectividad calculada sobre el universo macro real
+            if (kpis.totalMensajes > 0) {
+                kpis.conversionGeneral = (kpis.totalPagos / kpis.totalMensajes) * 100;
+            }
+
+            kpis.promedioMensajesPorContrato = kpis.totalMensajes / (uniqueContratos.size || 1);
+
+            return kpis;
+        }
+
+
+        function calculateJulio2026KPIs(data) {
+            const dataFiltrada = data.filter(record => {
+                const valorJ = record.mesPagoH; 
+                const perteneceAJulio = valorJ.includes('2026-07') || valorJ.includes('07-2026') || valorJ.includes('01-07-2026');
+                const esAdelantado = record.tipoDeEnvio === 'ADELANTADOS';
+                return perteneceAJulio && esAdelantado;
+            });
+
+            const kpis = {
+                totalEnviados: dataFiltrada.length, 
+                totalPagos: 0,
+                totalRecaudo: 0,
+                recaudoMasDos: 0,    
+                recaudoMenosDos: 0,  
+                efectividad: 0,
+                metaMensajes: 41026,       
+                metaRecaudo: 198617445,    
+                cumplimientoMensajes: 0,
+                cumplimientoRecaudo: 0,
+                porCuotas: {},
+                porMedio: {},
+                porRegional: {},
+                ultimoDiaMonto: 0,
+                penultimoDiaMonto: 0
+            };
+
+            const temporalAdelantados = {};
+
+            dataFiltrada.forEach(record => {
+                const medio = record.medioPago;
+                if (!kpis.porMedio[medio]) {
+                    kpis.porMedio[medio] = { enviados: 0, pagos: 0 };
+                }
+                kpis.porMedio[medio].enviados += 1;
+
+                const reg = record.regional;
+                if (!kpis.porRegional[reg]) {
+                    kpis.porRegional[reg] = { enviados: 0, pagos: 0 };
+                }
+                kpis.porRegional[reg].enviados += 1;
+
+                if (record.pagoActual > 0) {
+                    kpis.totalPagos += 1;
+                    kpis.porMedio[medio].pagos += 1;
+                    kpis.porRegional[reg].pagos += 1;
+                    
+                    kpis.totalRecaudo += record.pagoActual;
+
+                    const f = record.fechaPago;
+                    if(f && f !== '0') {
+                        temporalAdelantados[f] = (temporalAdelantados[f] || 0) + record.pagoActual;
+                    }
+
+                    if (record.cuotasPagadas >= 2) {
+                        kpis.recaudoMasDos += record.pagoActual;
+                    } else {
+                        kpis.recaudoMenosDos += record.pagoActual;
+                    }
+
+                    const cat = record.categoria;
+                    if (!kpis.porCuotas[cat]) kpis.porCuotas[cat] = 0;
+                    kpis.porCuotas[cat] += record.pagoActual;
+                }
+            });
+
+            const dOrdenados = Object.keys(temporalAdelantados).sort((a,b) => {
+                const pA = a.split('/'); const pB = b.split('/');
+                return new Date(pA[2], pA[1]-1, pA[0]) - new Date(pB[2], pB[1]-1, pB[0]);
+            });
+            if(dOrdenados.length >= 2){
+                kpis.ultimoDiaMonto = temporalAdelantados[dOrdenados[dOrdenados.length - 1]];
+                kpis.penultimoDiaMonto = temporalAdelantados[dOrdenados[dOrdenados.length - 2]];
+            }
+
+            if (kpis.totalEnviados > 0) kpis.efectividad = (kpis.totalPagos / kpis.totalEnviados) * 100;
+            if (kpis.metaMensajes > 0) kpis.cumplimientoMensajes = (kpis.totalEnviados / kpis.metaMensajes) * 100;
+            if (kpis.metaRecaudo > 0) kpis.cumplimientoRecaudo = (kpis.totalRecaudo / kpis.metaRecaudo) * 100;
+
+            return kpis;
+        }
+
+        function renderJulio2026Tables(kpis) {
+            document.getElementById('julio2026TotalEnviados').textContent = formatNumber(kpis.totalEnviados);
+            document.getElementById('julio2026TotalPagos').textContent = formatNumber(kpis.totalPagos);
+            document.getElementById('julio2026Efectividad').textContent = kpis.efectividad.toFixed(2) + '%';
+            
+            document.getElementById('julio2026TotalRecaudo').textContent = formatCurrency(kpis.totalRecaudo);
+            document.getElementById('julio2026RecaudoMasDos').textContent = formatCurrency(kpis.recaudoMasDos);
+            document.getElementById('julio2026RecaudoMenosDos').textContent = formatCurrency(kpis.recaudoMenosDos);
+            
+            const diffVerde = kpis.ultimoDiaMonto - kpis.penultimoDiaMonto;
+            document.getElementById('diffRecaudoAdelantados').innerHTML = formatBadgeVariation(diffVerde, false);
+
+            document.getElementById('julio2026CumplimientoMensajes').textContent = kpis.cumplimientoMensajes.toFixed(1) + '%';
+
+            setTimeout(() => {
+                const pMsg = document.getElementById('julio2026ProgressMensajes');
+                if(pMsg) pMsg.style.width = Math.min(kpis.cumplimientoMensajes, 100) + '%';
+            }, 100);
+
+            let htmlCuotas = '';
+            Object.keys(kpis.porCuotas).sort((a,b) => kpis.porCuotas[b] - kpis.porCuotas[a]).forEach(cat => {
+                htmlCuotas += `
+                    <tr class="hover:bg-green-50 transition">
+                        <td class="px-3 py-2.5 font-semibold text-slate-700">${cat}</td>
+                        <td class="px-3 py-2.5 text-right font-extrabold text-green-700">${formatCurrency(kpis.porCuotas[cat])}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tablaJulio2026Cuotas').innerHTML = htmlCuotas || '<tr><td colspan="2" class="px-3 py-4 text-center text-slate-400">Sin registros</td></tr>';
+
+            let htmlMedios = '';
+            Object.keys(kpis.porMedio).sort().forEach(medio => {
+                const data = kpis.porMedio[medio];
+                const efectividad = data.enviados > 0 ? ((data.pagos / data.enviados) * 100).toFixed(1) + '%' : '0.0%';
+                htmlMedios += `
+                    <tr class="hover:bg-green-50 transition">
+                        <td class="px-2 py-2.5 font-semibold text-slate-700 max-w-[120px] truncate" title="${medio}">${medio}</td>
+                        <td class="px-2 py-2.5 text-center text-slate-500">${formatNumber(data.enviados)}</td>
+                        <td class="px-2 py-2.5 text-center text-green-700 font-bold">${formatNumber(data.pagos)}</td>
+                        <td class="px-2 py-2.5 text-center font-bold text-green-800 bg-green-50/50">${efectividad}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tablaJulio2026Medios').innerHTML = htmlMedios || '<tr><td colspan="4" class="px-3 py-4 text-center text-slate-400">Sin registros</td></tr>';
+
+            let htmlRegional = '';
+            Object.keys(kpis.porRegional).sort().forEach(reg => {
+                const data = kpis.porRegional[reg];
+                const efectividad = data.enviados > 0 ? ((data.pagos / data.enviados) * 100).toFixed(1) + '%' : '0.0%';
+                htmlRegional += `
+                    <tr class="hover:bg-green-50 transition">
+                        <td class="px-2 py-2.5 font-semibold text-slate-700">${reg}</td>
+                        <td class="px-2 py-2.5 text-center text-slate-500">${formatNumber(data.enviados)}</td>
+                        <td class="px-2 py-2.5 text-center text-green-700 font-bold">${formatNumber(data.pagos)}</td>
+                        <td class="px-2 py-2.5 text-center font-bold text-green-800 bg-green-50/50">${efectividad}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tablaJulio2026Regional').innerHTML = htmlRegional || '<tr><td colspan="4" class="px-3 py-4 text-center text-slate-400">Sin registros</td></tr>';
+        }
+
+        function renderTablaCategories(data) {
+            const categoryData = {};
+            let totalRecaudo = 0;
+
+            data.forEach(record => {
+                const cat = record.categoria;
+                if (!categoryData[cat]) {
+                    categoryData[cat] = 0;
+                }
+                categoryData[cat] += record.pagoActual;
+                totalRecaudo += record.pagoActual;
+            });
+
+            const colors = ['#2b5cb3', '#4a7ecf', '#7fa7e8', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
+            let html = '';
+            let colorIndex = 0;
+
+            Object.keys(categoryData).sort((a, b) => categoryData[b] - categoryData[a]).forEach(cat => {
+                const monto = categoryData[cat];
+                const participacion = totalRecaudo > 0 ? (monto / totalRecaudo) * 100 : 0;
+                const color = colors[colorIndex % colors.length];
+                colorIndex++;
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-3 py-2.5">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-slate-700 text-xs">${cat}</span>
+                                <div class="progress-bar-mini mt-1.5">
+                                    <div class="progress-fill-mini" style="width: ${participacion.toFixed(1)}%; background-color: ${color};"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-3 py-2.5 text-right">
+                            <span class="font-bold text-[#2b5cb3] text-xs">${formatCurrency(monto)}</span>
+                        </td>
+                        <td class="px-3 py-2.5 text-center">
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black" style="background-color: ${color}20; color: ${color};">
+                                ${participacion.toFixed(1)}%
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('tablaCategoriaBody').innerHTML = html || '<tr><td colspan="3" class="px-3 py-4 text-center text-slate-400 text-xs">Sin registros</td></tr>';
+            document.getElementById('totalRecaudoCategoria').textContent = formatCurrency(totalRecaudo);
+        }
+
+        function renderSpecialTables(data) {
+            const catSummary = {};
+            const regSummary = {};
+            const medSummary = {};
+            const regActualizadosSummary = {}; 
+
+            data.forEach(record => {
+                const reg = record.regional;
+                const med = record.medioPago;
+
+                if (!regSummary[reg]) regSummary[reg] = { enviados: 0, pagaron: 0, total: 0 };
+                if (!medSummary[med]) medSummary[med] = { enviados: 0, pagaron: 0, total: 0 };
+                if (!regActualizadosSummary[reg]) regActualizadosSummary[reg] = 0;
+
+                regSummary[reg].enviados += 1;
+                medSummary[med].enviados += 1;
+
+                if (record.resultado === 'ACTUALIZADO') {
+                    regActualizadosSummary[reg] += 1;
+                }
+            });
+
+            data.forEach(record => {
+                if (record.cuotasPagadas >= 2 && record.esPagoEfectivo) {
+                    const cat = record.categoria;
+                    if (!catSummary[cat]) catSummary[cat] = { count: 0, total: 0 };
+                    catSummary[cat].count += 1;
+                    catSummary[cat].total += record.pagoActual;
+
+                    const reg = record.regional;
+                    regSummary[reg].pagaron += 1;
+                    regSummary[reg].total += record.pagoActual;
+
+                    const med = record.medioPago;
+                    medSummary[med].pagaron += 1;
+                    medSummary[med].total += record.pagoActual;
+                }
+            });
+
+            let catHtml = '';
+            Object.keys(catSummary).sort((a,b) => catSummary[b].total - catSummary[a].total).forEach(cat => {
+                catHtml += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-3 py-2.5 font-semibold text-slate-700">${cat}</td>
+                        <td class="px-3 py-2.5 text-center text-slate-500 font-bold">${formatNumber(catSummary[cat].count)}</td>
+                        <td class="px-3 py-2.5 text-right font-extrabold text-[#2b5cb3]">${formatCurrency(catSummary[cat].total)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tablaEspCategoriaBody').innerHTML = catHtml || '<tr><td colspan="3" class="px-3 py-4 text-center text-slate-400">Sin registros</td></tr>';
+
+            let medHtml = '';
+            Object.keys(medSummary).sort((a,b) => medSummary[b].total - medSummary[a].total).forEach(med => {
+                const env = medSummary[med].enviados;
+                const pag = medSummary[med].pagaron;
+                const efectividad = env > 0 ? ((pag / env) * 100).toFixed(1) + '%' : '0.0%';
+
+                medHtml += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-2 py-2.5 font-semibold text-slate-700 max-w-[100px] truncate" title="${med}">${med}</td>
+                        <td class="px-2 py-2.5 text-center text-slate-400 font-medium">${formatNumber(env)}</td>
+                        <td class="px-2 py-2.5 text-center text-slate-500 font-bold">${formatNumber(pag)}</td>
+                        <td class="px-2 py-2.5 text-center font-bold text-purple-700 bg-purple-50/40">${efectividad}</td>
+                        <td class="px-2 py-2.5 text-right font-extrabold text-[#2b5cb3]">${formatCurrency(medSummary[med].total)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tablaEspMedioPagoBody').innerHTML = medHtml || '<tr><td colspan="5" class="px-3 py-4 text-center text-slate-400">Sin registros</td></tr>';
+
+            let regHtml = '';
+            Object.keys(regSummary).sort((a,b) => regSummary[b].total - regSummary[a].total).forEach(reg => {
+                const env = regSummary[reg].enviados;
+                const pag = regSummary[reg].pagaron;
+                const efectividad = env > 0 ? ((pag / env) * 100).toFixed(1) + '%' : '0.0%';
+
+                regHtml += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-2 py-2.5 font-semibold text-slate-700">${reg}</td>
+                        <td class="px-2 py-2.5 text-center text-slate-400 font-medium">${formatNumber(env)}</td>
+                        <td class="px-2 py-2.5 text-center text-slate-500 font-bold">${formatNumber(pag)}</td>
+                        <td class="px-2 py-2.5 text-center font-bold text-purple-700 bg-purple-50/40">${efectividad}</td>
+                        <td class="px-2 py-2.5 text-right font-extrabold text-[#2b5cb3]">${formatCurrency(regSummary[reg].total)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tablaEspRegionalBody').innerHTML = regHtml || '<tr><td colspan="5" class="px-3 py-4 text-center text-slate-400">Sin registros</td></tr>';
+
+            let regActualizadosHtml = '';
+            Object.keys(regActualizadosSummary).sort((a,b) => regActualizadosSummary[b] - regActualizadosSummary[a]).forEach(reg => {
+                regActualizadosHtml += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-3 py-2 text-slate-700">${reg}</td>
+                        <td class="px-3 py-2 text-center text-[#2b5cb3] font-black">${formatNumber(regActualizadosSummary[reg])}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tablaEspRegionalActualizadosBody').innerHTML = regActualizadosHtml || '<tr><td colspan="2" class="px-3 py-4 text-center text-slate-400">Sin registros</td></tr>';
+        }
+
+
+        function renderTable(data) {
+            const summary = {};
+            data.forEach(record => {
+                const medio = record.medioPago;
+                if (!summary[medio]) {
+                    summary[medio] = { mensajes: 0, actMasDos: 0, recaudoMasDos: 0, actMenosDos: 0, recaudoMenosDos: 0 };
+                }
+                summary[medio].mensajes += 1;
+            });
+
+            data.forEach(record => {
+                const medio = record.medioPago;
+                const esActualizado = record.resultado === 'ACTUALIZADO';
+                
+                if (record.cuotasPagadas >= 2) {
+                    summary[medio].recaudoMasDos += record.pagoActual;
+                    if (esActualizado) summary[medio].actMasDos += 1;
+                } else {
+                    summary[medio].recaudoMenosDos += record.pagoActual;
+                    if (esActualizado) summary[medio].actMenosDos += 1;
+                }
+            });
+
+            let html = '';
+            Object.keys(summary).sort().forEach(medio => {
+                const item = summary[medio];
+                const totalActualizados = item.actMasDos + item.actMenosDos;
+                const efectividadUnificada = item.mensajes > 0 ? ((totalActualizados / item.mensajes) * 100).toFixed(1) + '%' : '0.0%';
+                
+                html += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-4 py-3 font-semibold text-slate-800">${medio}</td>
+                        <td class="px-4 py-3 text-center font-bold text-slate-600">${formatNumber(item.mensajes)}</td>
+                        <td class="px-4 py-3 text-center font-bold text-indigo-600">${formatNumber(item.actMasDos)}</td>
+                        <td class="px-4 py-3 text-center font-bold text-amber-600">${formatNumber(item.actMenosDos)}</td>
+                        <td class="px-4 py-3 text-center font-black text-purple-700 bg-purple-50/40">${efectividadUnificada}</td>
+                        <td class="px-4 py-3 text-right font-extrabold text-[#2b5cb3]">${formatCurrency(item.recaudoMasDos)}</td>
+                        <td class="px-4 py-3 text-right font-extrabold text-amber-600">${formatCurrency(item.recaudoMenosDos)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tablaMedioPagoBody').innerHTML = html;
+        }
+
+        function aggregateByField(data, field) {
+            const agg = {};
+            data.forEach(r => { agg[r[field]] = (agg[r[field]] || 0) + r.pagoActual; });
+            return agg;
+        }
+
+        function aggregateCountByField(data, field) {
+            const agg = {};
+            data.forEach(r => { agg[r[field]] = (agg[r[field]] || 0) + 1; });
+            return agg;
+        }
+
+        function aggregateByFieldMultiple(data, field, fields) {
+            const agg = {};
+            data.forEach(r => {
+                if (!agg[r[field]]) { agg[r[field]] = {}; fields.forEach(f => agg[r[field]][f] = 0); }
+                fields.forEach(f => agg[r[field]][f] += r[f]);
+            });
+            return agg;
+        }
+
+        function createLineChart(canvasId, labels, dataValues) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Monto Recaudado por Día',
+                        data: dataValues,
+                        borderColor: '#2b5cb3',
+                        backgroundColor: 'rgba(43, 92, 179, 0.05)',
+                        tension: 0.2,
+                        fill: true,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#2b5cb3'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: function(v) { return formatCurrency(v); } } }
+                    }
+                }
+            });
+        }
+
+        function updateKPIs(kpis) {
+            document.getElementById('totalMensajes').textContent = formatNumber(kpis.totalMensajes);
+            document.getElementById('promedioPorContrato').textContent = kpis.promedioMensajesPorContrato.toFixed(2);
+            document.getElementById('totalPagos').textContent = formatNumber(kpis.totalPagos);
+            document.getElementById('conversionGeneral').textContent = kpis.conversionGeneral.toFixed(2) + '%';
+            
+            if (kpis.totalMensajes > 0) {
+                const efect0a7 = (kpis.pagos0a7 / kpis.totalMensajes) * 100;
+                const efectMayor7 = (kpis.pagosMayor7 / kpis.totalMensajes) * 100;
+                
+                document.getElementById('recaudo0a7').textContent = formatCurrency(kpis.recaudo0a7);
+                document.getElementById('efectividad0a7').textContent = efect0a7.toFixed(2) + '%';
+                document.getElementById('conteoPagos0a7').textContent = formatNumber(kpis.pagos0a7);
+
+                document.getElementById('recaudoMayor7').textContent = formatCurrency(kpis.recaudoMayor7);
+                document.getElementById('efectividadMayor7').textContent = efectMayor7.toFixed(2) + '%';
+                document.getElementById('conteoPagosMayor7').textContent = formatNumber(kpis.pagosMayor7);
+            }
+
+            document.getElementById('dinEnviados').textContent = formatNumber(kpis.mensajesEnviadosDin);
+            document.getElementById('dinFaltantes').textContent = formatNumber(kpis.mensajesFaltantesDin);
+            document.getElementById('dinPorcentaje').textContent = kpis.porcentajeEnvioDin.toFixed(1) + '% Env.';
+
+            document.getElementById('espRecaudoLogrado').textContent = formatCurrency(kpis.recaudoMayorIgualDosCuotas);
+            document.getElementById('espPorcentajeCumplimiento').textContent = kpis.porcentajeCumplimientoEspecial.toFixed(1) + '%';
+
+            document.getElementById('totalRecaudoActual').textContent = formatCurrency(kpis.totalRecaudoActual);
+            document.getElementById('totalRecaudoEsperado').textContent = formatCurrency(kpis.totalRecaudoEsperado);
+            
+            const diffGlobalMonto = kpis.ultimoReporte.recaudoGlobal - kpis.penultimoReporte.recaudoGlobal;
+            const diffGlobalConv = kpis.ultimoReporte.conversion - kpis.penultimoReporte.conversion;
+            const diffEspecialMonto = kpis.ultimoReporte.recaudoEspecial - kpis.penultimoReporte.recaudoEspecial;
+
+            document.getElementById('diffRecaudoGlobal').innerHTML = formatBadgeVariation(diffGlobalMonto, false);
+            document.getElementById('diffConversionGlobal').innerHTML = formatBadgeVariation(diffGlobalConv, true);
+            document.getElementById('diffRecaudoEspecial').innerHTML = formatBadgeVariation(diffEspecialMonto, false);
+
+            document.getElementById('kpiSumaActualizadosMasDos').textContent = formatCurrency(kpis.recaudoActualizadosMasDos);
+            document.getElementById('kpiSumaActualizadosMenosDos').textContent = formatCurrency(kpis.recaudoActualizadosMenosDos);
+            document.getElementById('kpiTotalActualizadosGlobal').textContent = formatNumber(kpis.totalActualizadosGlobal);
+
+            createLineChart('chartTendenciaDiaria', kpis.fechasOrdenadas, kpis.fechasOrdenadas.map(f => kpis.recLinealChart[f]));
+
+            setTimeout(() => {
+                document.getElementById('espProgressCumplimiento').style.width = Math.min(kpis.porcentajeCumplimientoEspecial, 100) + '%';
+            }, 100);
+
+            document.getElementById('lastUpdate').textContent = getCurrentDateTime();
+        }
+
+        function createDoughnutChart(canvasId, labels, data, isCurrency = true, customColors = null) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+            const colors = customColors || ['#2b5cb3', '#4a7ecf', '#7fa7e8', '#b3cdff', '#e0ebff', '#cbd5e1'];
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: data, backgroundColor: colors.slice(0, labels.length), borderWidth: 2, borderColor: '#ffffff' }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 12, font: { size: 11, weight: 'bold' }, color: '#475569' } },
+                        tooltip: { callbacks: { label: function(c) { return `${c.label}: ${isCurrency ? formatCurrency(c.parsed) : formatNumber(c.parsed)} (${(((c.parsed / c.dataset.data.reduce((a, b) => a + b, 0)) * 100)).toFixed(1)}%)`; } } }
+                    }
+                }
+            });
+        }
+
+        function createBarChart(canvasId, labels, data, color = '#2b5cb3') {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ data: data, backgroundColor: color, borderRadius: 6 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { font: { size: 10, fontStyle: 'bold' }, callback: function(v) { return formatCurrency(v); } } },
+                        x: { ticks: { font: { size: 9, weight: 'bold' }, color: '#475569' } }
+                    }
+                }
+            });
+        }
+
+        function createGroupedBarChart(canvasId, labels, dataset1, dataset2) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: 'Cuota', data: dataset1, backgroundColor: '#94b3eb', borderRadius: 4 }, { label: 'Pago Actual', data: dataset2, backgroundColor: '#2b5cb3', borderRadius: 4 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { font: { size: 11, weight: 'bold' } } } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return formatCurrency(v); } } } }
+                }
+            });
+        }
+
+        function createFunnelChart(canvasId, mensajes, pagos) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: ['Mensajes', 'Pagos'], datasets: [{ data: [mensajes, pagos], backgroundColor: ['#4a7ecf', '#2b5cb3'], borderRadius: 6 }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function renderCharts(data) {
+            const medioPagoData = aggregateByField(data, 'medioPago');
+            createDoughnutChart('chartMedioPago', Object.keys(medioPagoData), Object.values(medioPagoData), true);
+
+            const regionalData = aggregateByField(data, 'regional');
+            createBarChart('chartRegional', Object.keys(regionalData), Object.values(regionalData), '#2b5cb3');
+
+            renderTablaCategories(data);
+
+            const resultadoData = aggregateCountByField(data, 'resultado');
+            createDoughnutChart('chartResultado', Object.keys(resultadoData), Object.values(resultadoData), false, ['#2b5cb3', '#7fa7e8', '#cbd5e1']);
+
+            const regionalComparativa = aggregateByFieldMultiple(data, 'regional', ['cuota', 'pagoActual']);
+            const regionalCompLabels = Object.keys(regionalComparativa);
+            createGroupedBarChart('chartComparativa', regionalCompLabels, regionalCompLabels.map(r => regionalComparativa[r].cuota), regionalCompLabels.map(r => regionalComparativa[r].pagoActual));
+
+            const kpis = calculateKPIs(data);
+            createFunnelChart('chartEmbudo', kpis.totalMensajes, kpis.totalPagos);
+        }
+
+        function loadData() {
+            Papa.parse(CSV_URL, {
+                download: true, header: false, skipEmptyLines: true,
+                complete: function(results) {
+                    try {
+                        const allRows = results.data;
+                        const headers = allRows[0];
+                        const dataRows = allRows.slice(1);
+                        const columnMap = mapColumns(headers);
+                        
+                        rawData = processData(dataRows, columnMap);
+                        
+                        console.log('✅ Datos procesados con mapeo correcto. Total registros:', rawData.length);
+                        
+                        const kpis = calculateKPIs(rawData);
+                        
+                        renderCharts(rawData);
+                        renderTable(rawData);
+                        renderSpecialTables(rawData);
+
+                        const kpisJulio2026 = calculateJulio2026KPIs(rawData);
+                        renderJulio2026Tables(kpisJulio2026);
+
+                        updateKPIs(kpis);
+                        hideLoading();
+                    } catch (e) { 
+                        console.error('❌ Error procesando datos principales:', e); 
+                        hideLoading();
+                    }
+                },
+                error: function(error) {
+                    console.error('❌ Error cargando CSV principal:', error);
+                    hideLoading();
+                }
+            });
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
