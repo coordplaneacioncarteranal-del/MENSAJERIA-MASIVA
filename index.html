@@ -731,7 +731,9 @@
             const uniqueContratos = new Set();
             
             data.forEach(record => {
-                kpis.totalRecaudoActual += record.pagoActual;
+                if (record.esPagoEfectivo) {
+                    kpis.totalRecaudoActual += record.pagoActual;
+                }
                 kpis.totalRecaudoEsperado += record.cuota;
                 
                 kpis.totalMensajes += 1;
@@ -740,8 +742,8 @@
                 }
 
                 if (record.pagoActual > 0) {
-                    kpis.totalPagos += 1;
                     if (record.esPagoEfectivo) {
+                        kpis.totalPagos += 1;
                         kpis.recaudo0a7 += record.pagoActual;
                         kpis.pagos0a7 += 1;
                     } else if (record.esPagoTardio) {
@@ -1323,20 +1325,29 @@
         }
 
         function renderCharts(data) {
-            const medioPagoData = aggregateByField(data, 'medioPago');
+            // Filtrar la data para que las gráficas solo muestren de 0 a 7 días
+            const dataEfectiva = data.filter(r => r.esPagoEfectivo);
+
+            const medioPagoData = aggregateByField(dataEfectiva, 'medioPago');
             createDoughnutChart('chartMedioPago', Object.keys(medioPagoData), Object.values(medioPagoData), true);
 
-            const regionalData = aggregateByField(data, 'regional');
+            const regionalData = aggregateByField(dataEfectiva, 'regional');
             createBarChart('chartRegional', Object.keys(regionalData), Object.values(regionalData), '#2b5cb3');
 
-            renderTablaCategories(data);
+            renderTablaCategories(dataEfectiva);
 
-            const resultadoData = aggregateCountByField(data, 'resultado');
+            const resultadoData = aggregateCountByField(dataEfectiva, 'resultado');
             createDoughnutChart('chartResultado', Object.keys(resultadoData), Object.values(resultadoData), false, ['#2b5cb3', '#7fa7e8', '#cbd5e1']);
 
-            const regionalComparativa = aggregateByFieldMultiple(data, 'regional', ['cuota', 'pagoActual']);
+            const regionalComparativa = aggregateByFieldMultiple(data, 'regional', ['cuota']);
+            const regionalComparativaEfectiva = aggregateByFieldMultiple(dataEfectiva, 'regional', ['pagoActual']);
+            
             const regionalCompLabels = Object.keys(regionalComparativa);
-            createGroupedBarChart('chartComparativa', regionalCompLabels, regionalCompLabels.map(r => regionalComparativa[r].cuota), regionalCompLabels.map(r => regionalComparativa[r].pagoActual));
+            createGroupedBarChart('chartComparativa', 
+                regionalCompLabels, 
+                regionalCompLabels.map(r => regionalComparativa[r].cuota), 
+                regionalCompLabels.map(r => regionalComparativaEfectiva[r] ? regionalComparativaEfectiva[r].pagoActual : 0)
+            );
 
             const kpis = calculateKPIs(data);
             createFunnelChart('chartEmbudo', kpis.totalMensajes, kpis.totalPagos);
