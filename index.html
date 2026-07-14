@@ -134,6 +134,10 @@
                     <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between">
                         <span class="text-xs font-semibold text-slate-500">Cantidad de Pagos: <strong class="text-slate-700" id="conteoPagos0a7">0</strong></span>
                     </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Por Grupo Atraso</span>
+                        <div class="flex flex-wrap gap-2" id="tagsGrupoAtraso0a7"></div>
+                    </div>
                 </div>
 
                 <!-- Tarjeta > 7 días -->
@@ -151,6 +155,42 @@
                     </div>
                     <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between">
                         <span class="text-xs font-semibold text-slate-500">Cantidad de Pagos: <strong class="text-slate-700" id="conteoPagosMayor7">0</strong></span>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Por Grupo Atraso</span>
+                        <div class="flex flex-wrap gap-2" id="tagsGrupoAtrasoMayor7"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <div class="card p-4 bg-white border border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Análisis Detallado por Grupo Atraso</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs text-left">
+                            <thead class="bg-slate-100 text-[10px] uppercase tracking-wider text-slate-500">
+                                <tr>
+                                    <th class="px-3 py-2.5 font-bold rounded-tl-lg">Grupo Atraso</th>
+                                    <th class="px-3 py-2.5 font-bold text-center">Mensajes Enviados</th>
+                                    <th class="px-3 py-2.5 font-bold text-center">Pagos (0 a 7 días)</th>
+                                    <th class="px-3 py-2.5 font-bold text-center">Pagos (> 7 días)</th>
+                                    <th class="px-3 py-2.5 font-bold text-right text-emerald-600">Recaudo (0 a 7 días)</th>
+                                    <th class="px-3 py-2.5 font-bold text-right text-slate-600 rounded-tr-lg">Recaudo (> 7 días)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaGrupoAtrasoBody" class="divide-y divide-slate-100 font-medium">
+                            </tbody>
+                            <tfoot class="bg-slate-200 font-bold sticky bottom-0">
+                                <tr>
+                                    <td class="px-3 py-2.5 text-slate-800 text-xs rounded-bl-lg">TOTAL</td>
+                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs" id="totalEnvGrupoAtraso">0</td>
+                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs" id="totalPagos0a7GrupoAtraso">0</td>
+                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs" id="totalPagosMayor7GrupoAtraso">0</td>
+                                    <td class="px-3 py-2.5 text-right text-emerald-600 font-black text-xs" id="totalRecaudo0a7GrupoAtraso">$0</td>
+                                    <td class="px-3 py-2.5 text-right text-slate-800 font-black text-xs rounded-br-lg" id="totalRecaudoMayor7GrupoAtraso">$0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -662,7 +702,8 @@
                 resultado: h.indexOf('ACTUALIZADO'),       
                 mesPagoH: h.indexOf('MES PAGO HASTA'),
                 tipoDeEnvio: h.indexOf('TIPO DE MENSAJE'),
-                diasPago: h.indexOf('DIAS DE PAGO')
+                diasPago: h.indexOf('DIAS DE PAGO'),
+                grupoAtraso: h.indexOf('ATRASO')
             };
         }
 
@@ -673,6 +714,11 @@
                 const diasPagoNum = parseFloat(diasPagoRaw ? diasPagoRaw.toString().trim() : 'NaN');
                 const esPagoEfectivo = !isNaN(diasPagoNum) && diasPagoNum >= 0 && diasPagoNum <= 7;
                 const esPagoTardio = !isNaN(diasPagoNum) && diasPagoNum > 7;
+
+                let rawGrupoAtraso = columnMap.grupoAtraso !== -1 ? normalizeString(row[columnMap.grupoAtraso]) : 'SIN ASIGNAR';
+                if (rawGrupoAtraso.includes('N/D') || rawGrupoAtraso.includes('N/A') || rawGrupoAtraso === '') {
+                    rawGrupoAtraso = 'ADELANTADO';
+                }
 
                 return {
                     medioPago: columnMap.medioPago !== -1 ? normalizeString(row[columnMap.medioPago]) : 'SIN ASIGNAR',
@@ -686,6 +732,7 @@
                     pagoActual: columnMap.pagoActual !== -1 ? parseNumber(row[columnMap.pagoActual]) : 0,
                     mesPagoH: columnMap.mesPagoH !== -1 ? normalizeString(row[columnMap.mesPagoH]) : '', 
                     tipoDeEnvio: columnMap.tipoDeEnvio !== -1 ? normalizeString(row[columnMap.tipoDeEnvio]) : 'SIN ASIGNAR',
+                    grupoAtraso: rawGrupoAtraso,
                     esPagoEfectivo: esPagoEfectivo,
                     esPagoTardio: esPagoTardio
                 };
@@ -706,6 +753,8 @@
                 pagos0a7: 0,
                 recaudoMayor7: 0,
                 pagosMayor7: 0,
+                grupoAtraso0a7: {},
+                grupoAtrasoMayor7: {},
 
                 totalGlobal: data.length,
                 metaFijaObjetivo: 628494025,
@@ -742,13 +791,17 @@
                 }
 
                 if (record.pagoActual > 0) {
+                    const grupo = record.grupoAtraso || 'SIN ASIGNAR';
+                    
                     if (record.esPagoEfectivo) {
                         kpis.totalPagos += 1;
                         kpis.recaudo0a7 += record.pagoActual;
                         kpis.pagos0a7 += 1;
+                        kpis.grupoAtraso0a7[grupo] = (kpis.grupoAtraso0a7[grupo] || 0) + record.pagoActual;
                     } else if (record.esPagoTardio) {
                         kpis.recaudoMayor7 += record.pagoActual;
                         kpis.pagosMayor7 += 1;
+                        kpis.grupoAtrasoMayor7[grupo] = (kpis.grupoAtrasoMayor7[grupo] || 0) + record.pagoActual;
                     }
                 }
 
@@ -1022,6 +1075,72 @@
             document.getElementById('totalRecaudoCategoria').textContent = formatCurrency(totalRecaudo);
         }
 
+        function renderTablaGrupoAtraso(data) {
+            const grupoData = {};
+            let totalEnv = 0, totalPag0a7 = 0, totalPagMayor7 = 0;
+            let totalRec0a7 = 0, totalRecMayor7 = 0;
+
+            data.forEach(record => {
+                const grupo = record.grupoAtraso || 'SIN ASIGNAR';
+                if (!grupoData[grupo]) {
+                    grupoData[grupo] = { enviados: 0, pag0a7: 0, pagMayor7: 0, rec0a7: 0, recMayor7: 0 };
+                }
+                
+                grupoData[grupo].enviados += 1;
+                totalEnv += 1;
+
+                if (record.pagoActual > 0) {
+                    if (record.esPagoEfectivo) {
+                        grupoData[grupo].pag0a7 += 1;
+                        grupoData[grupo].rec0a7 += record.pagoActual;
+                        totalPag0a7 += 1;
+                        totalRec0a7 += record.pagoActual;
+                    } else if (record.esPagoTardio) {
+                        grupoData[grupo].pagMayor7 += 1;
+                        grupoData[grupo].recMayor7 += record.pagoActual;
+                        totalPagMayor7 += 1;
+                        totalRecMayor7 += record.pagoActual;
+                    }
+                }
+            });
+
+            const colors = ['#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0']; // tonos esmeralda
+            let html = '';
+            let colorIndex = 0;
+
+            Object.keys(grupoData).sort((a, b) => grupoData[b].rec0a7 - grupoData[a].rec0a7).forEach(grupo => {
+                const row = grupoData[grupo];
+                const participacion = totalRec0a7 > 0 ? (row.rec0a7 / totalRec0a7) * 100 : 0;
+                const color = colors[colorIndex % colors.length];
+                colorIndex++;
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-3 py-2.5">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-slate-700 text-xs">${grupo}</span>
+                                <div class="progress-bar-mini mt-1.5">
+                                    <div class="progress-fill-mini" style="width: ${participacion}%; background-color: ${color}"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-3 py-2.5 text-center font-bold text-slate-600 align-top">${formatNumber(row.enviados)}</td>
+                        <td class="px-3 py-2.5 text-center font-bold text-emerald-600 align-top">${formatNumber(row.pag0a7)}</td>
+                        <td class="px-3 py-2.5 text-center font-bold text-slate-500 align-top">${formatNumber(row.pagMayor7)}</td>
+                        <td class="px-3 py-2.5 text-right font-bold text-emerald-700 align-top">${formatCurrency(row.rec0a7)}</td>
+                        <td class="px-3 py-2.5 text-right font-bold text-slate-600 align-top">${formatCurrency(row.recMayor7)}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('tablaGrupoAtrasoBody').innerHTML = html || '<tr><td colspan="6" class="px-3 py-4 text-center text-slate-400">Sin datos</td></tr>';
+            document.getElementById('totalEnvGrupoAtraso').textContent = formatNumber(totalEnv);
+            document.getElementById('totalPagos0a7GrupoAtraso').textContent = formatNumber(totalPag0a7);
+            document.getElementById('totalPagosMayor7GrupoAtraso').textContent = formatNumber(totalPagMayor7);
+            document.getElementById('totalRecaudo0a7GrupoAtraso').textContent = formatCurrency(totalRec0a7);
+            document.getElementById('totalRecaudoMayor7GrupoAtraso').textContent = formatCurrency(totalRecMayor7);
+        }
+
         function renderSpecialTables(data) {
             const catSummary = {};
             const regSummary = {};
@@ -1233,6 +1352,18 @@
                 document.getElementById('recaudoMayor7').textContent = formatCurrency(kpis.recaudoMayor7);
                 document.getElementById('efectividadMayor7').textContent = efectMayor7.toFixed(2) + '%';
                 document.getElementById('conteoPagosMayor7').textContent = formatNumber(kpis.pagosMayor7);
+
+                const renderTags = (dict, containerId, colorClass) => {
+                    const container = document.getElementById(containerId);
+                    let html = '';
+                    Object.entries(dict).sort((a,b) => b[1]-a[1]).forEach(([grupo, monto]) => {
+                        html += `<span class="bg-${colorClass}-50 text-${colorClass}-700 border border-${colorClass}-200 text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">${grupo}: ${formatCurrency(monto)}</span>`;
+                    });
+                    container.innerHTML = html || `<span class="text-xs text-slate-400 italic">Sin datos</span>`;
+                };
+
+                renderTags(kpis.grupoAtraso0a7, 'tagsGrupoAtraso0a7', 'emerald');
+                renderTags(kpis.grupoAtrasoMayor7, 'tagsGrupoAtrasoMayor7', 'slate');
             }
 
             document.getElementById('dinEnviados').textContent = formatNumber(kpis.mensajesEnviadosDin);
@@ -1335,6 +1466,7 @@
             createBarChart('chartRegional', Object.keys(regionalData), Object.values(regionalData), '#2b5cb3');
 
             renderTablaCategories(dataEfectiva);
+            renderTablaGrupoAtraso(data);
 
             const resultadoData = aggregateCountByField(dataEfectiva, 'resultado');
             createDoughnutChart('chartResultado', Object.keys(resultadoData), Object.values(resultadoData), false, ['#2b5cb3', '#7fa7e8', '#cbd5e1']);
