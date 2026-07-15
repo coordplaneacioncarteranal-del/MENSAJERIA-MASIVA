@@ -679,6 +679,16 @@
                         <p class="text-3xl font-black text-[#2b5cb3] my-2" id="kpiSumaActualizadosMasDos">$0</p>
                         <p class="text-xs text-slate-500 font-medium">Monto total recolectado de usuarios actualizados con 2 o más cuotas pagadas.</p>
                     </div>
+                    <div class="mt-3 flex justify-between border-t border-green-100 pt-2">
+                        <div>
+                            <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">0 a 7 días</p>
+                            <p class="text-sm font-black text-green-600" id="kpiSumaActualizadosMasDos0a7">$0</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">&gt; 7 días</p>
+                            <p class="text-sm font-black text-green-600" id="kpiSumaActualizadosMasDosMayor7">$0</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card bg-white border border-amber-300 p-5 flex flex-col justify-between shadow-sm">
@@ -689,6 +699,16 @@
                         </div>
                         <p class="text-3xl font-black text-amber-600 my-2" id="kpiSumaActualizadosMenosDos">$0</p>
                         <p class="text-xs text-slate-500 font-medium">Monto total recolectado de usuarios actualizados con menos de 2 cuotas pagadas.</p>
+                    </div>
+                    <div class="mt-3 flex justify-between border-t border-amber-100 pt-2">
+                        <div>
+                            <p class="text-[10px] text-amber-500 font-bold uppercase tracking-wider">0 a 7 días</p>
+                            <p class="text-sm font-black text-amber-600" id="kpiSumaActualizadosMenosDos0a7">$0</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-amber-500 font-bold uppercase tracking-wider">&gt; 7 días</p>
+                            <p class="text-sm font-black text-amber-600" id="kpiSumaActualizadosMenosDosMayor7">$0</p>
+                        </div>
                     </div>
                 </div>
 
@@ -895,9 +915,12 @@
                 porcentajeEnvioDin: 0,
                 
                 recaudoActualizadosMasDos: 0,
+                recaudoActualizadosMasDos0a7: 0,
+                recaudoActualizadosMasDosMayor7: 0,
                 recaudoActualizadosMenosDos: 0,
+                recaudoActualizadosMenosDos0a7: 0,
+                recaudoActualizadosMenosDosMayor7: 0,
                 totalActualizadosGlobal: 0,
-                recaudoMayorIgualDosCuotas: 0,
                 ultimoReporte: { recaudoGlobal: 0, conversion: 0, recaudoEspecial: 0 },
                 penultimoReporte: { recaudoGlobal: 0, conversion: 0, recaudoEspecial: 0 },
                 recLinealChart: {} 
@@ -909,6 +932,7 @@
             data.forEach(record => {
                 if (record.esPagoEfectivo) {
                     kpis.totalRecaudoActual += record.pagoActual;
+                    kpis.totalRecaudoEfectivo += record.pagoActual;
                 }
                 kpis.totalRecaudoEsperado += record.cuota;
                 
@@ -944,9 +968,23 @@
 
                 if (record.cuotasPagadas >= 2) {
                     if (record.esPagoEfectivo) kpis.recaudoMayorIgualDosCuotas += record.pagoActual;
-                    if (esActualizado && isValidPago) kpis.recaudoActualizadosMasDos += record.pagoActual;
+                    if (esActualizado && isValidPago) {
+                        kpis.recaudoActualizadosMasDos += record.pagoActual;
+                        if (record.esPagoEfectivo) {
+                            kpis.recaudoActualizadosMasDos0a7 += record.pagoActual;
+                        } else {
+                            kpis.recaudoActualizadosMasDosMayor7 += record.pagoActual;
+                        }
+                    }
                 } else {
-                    if (esActualizado && isValidPago) kpis.recaudoActualizadosMenosDos += record.pagoActual;
+                    if (esActualizado && isValidPago) {
+                        kpis.recaudoActualizadosMenosDos += record.pagoActual;
+                        if (record.esPagoEfectivo) {
+                            kpis.recaudoActualizadosMenosDos0a7 += record.pagoActual;
+                        } else {
+                            kpis.recaudoActualizadosMenosDosMayor7 += record.pagoActual;
+                        }
+                    }
                 }
 
                 const fRaw = record.fechaPago;
@@ -1520,7 +1558,13 @@
             document.getElementById('diffRecaudoEspecial').innerHTML = formatBadgeVariation(diffEspecialMonto, false);
 
             document.getElementById('kpiSumaActualizadosMasDos').textContent = formatCurrency(kpis.recaudoActualizadosMasDos);
+            document.getElementById('kpiSumaActualizadosMasDos0a7').textContent = formatCurrency(kpis.recaudoActualizadosMasDos0a7);
+            document.getElementById('kpiSumaActualizadosMasDosMayor7').textContent = formatCurrency(kpis.recaudoActualizadosMasDosMayor7);
+
             document.getElementById('kpiSumaActualizadosMenosDos').textContent = formatCurrency(kpis.recaudoActualizadosMenosDos);
+            document.getElementById('kpiSumaActualizadosMenosDos0a7').textContent = formatCurrency(kpis.recaudoActualizadosMenosDos0a7);
+            document.getElementById('kpiSumaActualizadosMenosDosMayor7').textContent = formatCurrency(kpis.recaudoActualizadosMenosDosMayor7);
+            
             document.getElementById('kpiTotalActualizadosGlobal').textContent = formatNumber(kpis.totalActualizadosGlobal);
 
             createLineChart('chartTendenciaDiaria', kpis.fechasOrdenadas, kpis.fechasOrdenadas.map(f => kpis.recLinealChart[f]));
