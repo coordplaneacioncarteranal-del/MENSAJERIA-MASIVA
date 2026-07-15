@@ -574,6 +574,94 @@
             </div>
         </section>
 
+        <!-- Sección Promoción 15% -->
+        <section class="mb-10" id="seccionQuince">
+            <div class="mb-6 flex items-center justify-between border-b pb-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-800 mt-2">Mensajeria Promocion 15% 2 cuotas o mas por votacion</h2>
+                    <p class="text-slate-600 text-sm">Comportamiento de pago de los mensajes especiales de clientes con 15%</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card bg-white border border-green-300 p-5 flex flex-col justify-between shadow-sm">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-green-700 uppercase tracking-wider">Recaudo Objetivo</span>
+                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded">Promo 15% >= 2</span>
+                        </div>
+                        <p class="text-3xl font-black text-[#2b5cb3] my-2" id="kpiSumaQuinceMasDos">$0</p>
+                        <p class="text-xs text-slate-500 font-medium">Monto recolectado de usuarios con 15% y 2 o más cuotas.</p>
+                    </div>
+                </div>
+
+                <div class="card bg-white border border-amber-300 p-5 flex flex-col justify-between shadow-sm">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-amber-700 uppercase tracking-wider">Recaudo Menor</span>
+                            <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-0.5 rounded">Promo 15% &lt; 2</span>
+                        </div>
+                        <p class="text-3xl font-black text-amber-600 my-2" id="kpiSumaQuinceMenosDos">$0</p>
+                        <p class="text-xs text-slate-500 font-medium">Monto recolectado de usuarios con 15% y menos de 2 cuotas.</p>
+                    </div>
+                </div>
+
+                <div class="card bg-gradient-to-br from-white to-purple-50/50 border border-purple-300 p-5 flex flex-col justify-between shadow-sm">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-purple-700 uppercase tracking-wider">Volumen de Gestión</span>
+                            <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded">Total Base 15%</span>
+                        </div>
+                        <p class="text-3xl font-black text-[#2b5cb3] my-2" id="kpiTotalQuinceGlobal">0</p>
+                        <p class="text-xs text-slate-500 font-medium">Cantidad total de registros en la promoción del 15%.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                <div class="card p-6 bg-white border border-slate-200 shadow-sm xl:col-span-2">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">Resultado por Medio de Pago (15%)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm text-left text-slate-600">
+                            <thead class="bg-slate-100 text-xs text-slate-700 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-4 py-3 font-semibold rounded-l-lg">Medio de Pago</th>
+                                    <th class="px-4 py-3 font-semibold text-center">Total Mensajes</th>
+                                    <th class="px-4 py-3 font-semibold text-center text-indigo-700">Promo 15% (>=2)</th>
+                                    <th class="px-4 py-3 font-semibold text-center text-amber-700">Promo 15% (&lt;2)</th>
+                                    <th class="px-4 py-3 font-semibold text-center text-purple-700 bg-purple-50/50">% Efectividad Total</th>
+                                    <th class="px-4 py-3 font-semibold text-right text-indigo-700">Recaudo (>=2)</th>
+                                    <th class="px-4 py-3 font-semibold text-right text-amber-700 rounded-r-lg">Recaudo (&lt;2)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMedioPagoQuinceBody" class="divide-y divide-slate-100 font-medium">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card p-6 bg-white border border-slate-200 shadow-sm col-span-1">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">📍 Promo 15% por Regional</h3>
+                    </div>
+                    <div class="overflow-x-auto" style="max-height: 334px;">
+                        <table class="min-w-full text-xs text-left text-slate-700">
+                            <thead class="bg-slate-100 text-[10px] uppercase tracking-wider text-slate-500 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-3 py-2.5 font-bold rounded-l-lg">Regional</th>
+                                    <th class="px-3 py-2.5 font-bold text-center rounded-r-lg">Total 15%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaEspRegionalQuinceBody" class="divide-y divide-slate-100 font-semibold">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="mb-8 p-6 bg-slate-100 border border-slate-300 rounded-2xl shadow-inner">
             <div class="border-b border-slate-300 pb-4 mb-6">
                 <span class="bg-indigo-600 text-white text-xs font-bold uppercase px-3 py-1 rounded-full">Sección Especial</span>
@@ -809,8 +897,7 @@
                 recaudoActualizadosMasDos: 0,
                 recaudoActualizadosMenosDos: 0,
                 totalActualizadosGlobal: 0,
-
-                fechasOrdenadas: [],
+                recaudoMayorIgualDosCuotas: 0,
                 ultimoReporte: { recaudoGlobal: 0, conversion: 0, recaudoEspecial: 0 },
                 penultimoReporte: { recaudoGlobal: 0, conversion: 0, recaudoEspecial: 0 },
                 recLinealChart: {} 
@@ -1297,9 +1384,7 @@
             const summary = {};
             data.forEach(record => {
                 const medio = record.medioPago;
-                if (!summary[medio]) {
-                    summary[medio] = { mensajes: 0, actMasDos: 0, recaudoMasDos: 0, actMenosDos: 0, recaudoMenosDos: 0 };
-                }
+                if (!summary[medio]) summary[medio] = { mensajes: 0, actMasDos: 0, recaudoMasDos: 0, actMenosDos: 0, recaudoMenosDos: 0 };
                 summary[medio].mensajes += 1;
             });
 
@@ -1535,6 +1620,109 @@
             createFunnelChart('chartEmbudo', kpis.totalMensajes, kpis.totalPagos);
         }
 
+        function loadPromo15Data() {
+            const ts = new Date().getTime();
+            const baseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSYgitljjICa1hyaX1iOrAsjg-RFyM8ruiRDuww6mBL1CRalpXu06l8b-3rQvOofdz4MIXX7PmHymam/pub?output=csv';
+            const urlPromo15 = baseUrl + '&single=true&gid=767764741&t=' + ts;
+
+            Papa.parse(urlPromo15, {
+                download: true, header: false, skipEmptyLines: true,
+                complete: function(results) {
+                    try {
+                        if (results.data.length === 0) {
+                            updatePromo15UI([]);
+                            return;
+                        }
+                        const allRows = results.data;
+                        const headers = allRows[0];
+                        const dataRows = allRows.slice(1);
+                        const columnMap = mapColumns(headers);
+                        
+                        const promo15Data = processData(dataRows, columnMap);
+                        updatePromo15UI(promo15Data);
+                    } catch (e) {
+                        console.error('Error Promo 15:', e);
+                        updatePromo15UI([]);
+                    }
+                },
+                error: function(err) {
+                    console.error('Papa Parse Promo 15 Error:', err);
+                    updatePromo15UI([]);
+                }
+            });
+        }
+
+        function updatePromo15UI(data) {
+            let recaudoQuinceMasDos = 0;
+            let recaudoQuinceMenosDos = 0;
+            let totalQuinceGlobal = 0;
+            
+            const summary15 = {};
+            const regQuinceSummary = {}; 
+
+            data.forEach(record => {
+                totalQuinceGlobal += 1;
+
+                if (record.cuotasPagadas >= 2) {
+                    recaudoQuinceMasDos += record.pagoActual;
+                } else {
+                    recaudoQuinceMenosDos += record.pagoActual;
+                }
+
+                const medio = record.medioPago;
+                if (!summary15[medio]) summary15[medio] = { mensajes: 0, actMasDos: 0, recaudoMasDos: 0, actMenosDos: 0, recaudoMenosDos: 0 };
+                summary15[medio].mensajes += 1;
+                
+                if (record.cuotasPagadas >= 2) {
+                    summary15[medio].recaudoMasDos += record.pagoActual;
+                    summary15[medio].actMasDos += 1;
+                } else {
+                    summary15[medio].recaudoMenosDos += record.pagoActual;
+                    summary15[medio].actMenosDos += 1;
+                }
+
+                const reg = record.regional;
+                if (!regQuinceSummary[reg]) regQuinceSummary[reg] = 0;
+                regQuinceSummary[reg] += 1;
+            });
+
+            document.getElementById('kpiSumaQuinceMasDos').textContent = formatCurrency(recaudoQuinceMasDos);
+            document.getElementById('kpiSumaQuinceMenosDos').textContent = formatCurrency(recaudoQuinceMenosDos);
+            document.getElementById('kpiTotalQuinceGlobal').textContent = formatNumber(totalQuinceGlobal);
+
+            let html15 = '';
+            Object.keys(summary15).sort().forEach(medio => {
+                const item = summary15[medio];
+                const totalQuince = item.actMasDos + item.actMenosDos;
+                const efectividadUnificada = item.mensajes > 0 ? ((totalQuince / item.mensajes) * 100).toFixed(1) + '%' : '0.0%';
+                
+                html15 += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-4 py-3 font-semibold text-slate-800">${medio}</td>
+                        <td class="px-4 py-3 text-center font-bold text-slate-600">${formatNumber(item.mensajes)}</td>
+                        <td class="px-4 py-3 text-center font-bold text-indigo-600">${formatNumber(item.actMasDos)}</td>
+                        <td class="px-4 py-3 text-center font-bold text-amber-600">${formatNumber(item.actMenosDos)}</td>
+                        <td class="px-4 py-3 text-center font-black text-purple-700 bg-purple-50/40">${efectividadUnificada}</td>
+                        <td class="px-4 py-3 text-right font-extrabold text-[#2b5cb3]">${formatCurrency(item.recaudoMasDos)}</td>
+                        <td class="px-4 py-3 text-right font-extrabold text-amber-600">${formatCurrency(item.recaudoMenosDos)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tablaMedioPagoQuinceBody').innerHTML = html15 || '<tr><td colspan="7" class="px-3 py-4 text-center text-slate-400">Sin registros</td></tr>';
+
+            let regQuinceHtml = '';
+            Object.keys(regQuinceSummary).sort((a,b) => regQuinceSummary[b] - regQuinceSummary[a]).forEach(reg => {
+                if(regQuinceSummary[reg] === 0) return;
+                regQuinceHtml += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-3 py-2.5 font-semibold text-slate-700 max-w-[120px] truncate" title="${reg}">${reg}</td>
+                        <td class="px-3 py-2.5 text-center font-bold text-[#2b5cb3]">${formatNumber(regQuinceSummary[reg])}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('tablaEspRegionalQuinceBody').innerHTML = regQuinceHtml || '<tr><td colspan="2" class="px-3 py-4 text-center text-slate-400">Sin registros</td></tr>';
+        }
+
         function loadData() {
             Papa.parse(CSV_URL, {
                 download: true, header: false, skipEmptyLines: true,
@@ -1560,9 +1748,13 @@
 
                         updateKPIs(kpis);
                         hideLoading();
-                    } catch (e) { 
-                        console.error('❌ Error procesando datos principales:', e); 
+
+                        // Una vez cargados los datos principales, cargamos el 15%
+                        loadPromo15Data();
+                    } catch (e) {
+                        console.error('Error:', e);
                         hideLoading();
+                        loadPromo15Data(); // Intentar cargar el 15% de todos modos
                     }
                 },
                 error: function(error) {
