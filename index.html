@@ -3,322 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Conversión y Recaudo Mensajería Masiva</title>
+    <title>Dashboard Conversión Mensajería</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <style>
-        body {
-            background-color: #f4f6f9;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        
-        .spinner {
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #2b5cb3;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .card {
-            background: #ffffff;
-            border-radius: 1rem;
-            box-shadow: 0 4px 4px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-        }
-        
-        .progress-bar {
-            height: 8px;
-            background-color: #e2e8f0;
-            border-radius: 9999px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #2b5cb3;
-            transition: width 1s ease-out;
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-        
-        .chart-container-tall {
-            position: relative;
-            height: 400px;
-            width: 100%;
-        }
-
-        .progress-bar-mini {
-            height: 6px;
-            background-color: #e2e8f0;
-            border-radius: 9999px;
-            overflow: hidden;
-            width: 100%;
-        }
-        
-        .progress-fill-mini {
-            height: 100%;
-            border-radius: 9999px;
-            transition: width 0.8s ease-out;
-        }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 </head>
-<body class="p-4 md:p-8">
-    
-    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 backdrop-blur-sm">
-        <div class="text-center">
-            <div class="spinner mx-auto mb-4"></div>
-            <p class="text-white text-xl font-semibold">Cargando y procesando Hoja de Cálculo...</p>
-            <p class="text-slate-300 text-sm mt-2">Por favor espere...</p>
-        </div>
-    </div>
-
-    <div id="dashboard" class="hidden">
-        
-        <header class="mb-6 flex justify-between items-start md:items-center flex-col md:flex-row gap-4 border-b border-slate-200 pb-4">
-            <div>
-                <h1 class="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
-                    <span class="w-2.5 h-7 bg-[#2b5cb3] rounded-full inline-block"></span>
-                    Dashboard Mensajería Masiva
-                </h1>
-                <p class="text-slate-500 text-sm mt-0.5">Análisis operativo y financiero con auditoría de tendencia por fecha de pago</p>
-            </div>
-            <div class="flex gap-3">
-                <div class="flex flex-col justify-center">
-                    <select id="monthSelect" onchange="changeMonth()" class="bg-indigo-50 border border-indigo-200 text-indigo-800 text-[11px] rounded-xl focus:ring-[#2b5cb3] focus:border-[#2b5cb3] block w-full p-2 font-black shadow-sm outline-none cursor-pointer uppercase tracking-wider">
-                        <option value="">Vista Junio</option>
-                        <option value="126771446">Vista Julio</option>
-                    </select>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
-                <div class="bg-slate-800 text-white px-4 py-2 rounded-xl shadow-sm border border-slate-700 text-right">
-                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Último Cierre vs Penúltimo</p>
-                    <p class="text-xs font-mono font-bold" id="cruceFechas">Detectando fechas...</p>
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800 tracking-tight">CONSOLIDADO RESULTADOS ENVIO DE MENSAJERIA Y PROMOCIONES</h1>
+                    <p class="text-xs text-slate-500 font-medium">Análisis de rendimiento de estrategias de mensajería (Junio/Julio 2026)</p>
                 </div>
-                <div class="bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-100 text-right">
-                    <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Última actualización</p>
-                    <p class="text-xs font-semibold text-slate-700" id="lastUpdate"></p>
-                </div>
-            </div>
-        </header>
-
-        <section class="mb-8 p-6 bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-2xl shadow-sm">
-            <div class="border-b border-slate-200 pb-3 mb-5">
-                <span class="bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider shadow-sm">Atribución de Efectividad</span>
-                <h2 class="text-xl font-extrabold mt-2 text-slate-800">Análisis por Tiempos de Pago</h2>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <!-- Tarjeta 0 a 7 días -->
-                <div class="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm flex flex-col">
-                    <span class="text-xs text-emerald-700 font-bold uppercase tracking-wider block mb-2">Pagos entre 0 a 7 días después del envío</span>
-                    <div class="flex justify-between items-end mt-2">
-                        <div>
-                            <p class="text-xs text-slate-500 font-semibold mb-1">Recaudo Efectivo</p>
-                            <p class="text-3xl font-black text-emerald-600" id="recaudo0a7">$0</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xs text-slate-500 font-semibold mb-1">Efectividad</p>
-                            <p class="text-2xl font-bold text-emerald-700" id="efectividad0a7">0%</p>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between">
-                        <span class="text-xs font-semibold text-slate-500">Cantidad de Pagos: <strong class="text-slate-700" id="conteoPagos0a7">0</strong></span>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-slate-100">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Por Grupo Atraso</span>
-                        <div class="flex flex-wrap gap-2" id="tagsGrupoAtraso0a7"></div>
-                    </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Última actualización</p>
+                    <p class="text-sm font-semibold text-slate-700" id="lastUpdated">Cargando...</p>
                 </div>
+                <button onclick="loadData()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 p-2.5 rounded-lg transition-colors border border-indigo-100 group" title="Recargar datos">
+                    <svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
 
-                <!-- Tarjeta > 7 días -->
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                    <span class="text-xs text-slate-600 font-bold uppercase tracking-wider block mb-2">Pagos después de 7 días del envío (Dato Estadístico)</span>
-                    <div class="flex justify-between items-end mt-2">
-                        <div>
-                            <p class="text-xs text-slate-500 font-semibold mb-1">Recaudo Tardío</p>
-                            <p class="text-3xl font-black text-slate-700" id="recaudoMayor7">$0</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xs text-slate-500 font-semibold mb-1">Efectividad Tardía</p>
-                            <p class="text-2xl font-bold text-slate-600" id="efectividadMayor7">0%</p>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between">
-                        <span class="text-xs font-semibold text-slate-500">Cantidad de Pagos: <strong class="text-slate-700" id="conteoPagosMayor7">0</strong></span>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-slate-100">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Por Grupo Atraso</span>
-                        <div class="flex flex-wrap gap-2" id="tagsGrupoAtrasoMayor7"></div>
-                    </div>
-                </div>
+    <!-- Loading State -->
+    <div id="loading" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+        <div class="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <p class="text-lg font-bold text-slate-700 animate-pulse">Analizando datos y procesando KPIs...</p>
+    </div>
+
+    <!-- Main Content -->
+    <main id="dashboard" class="hidden max-w-7xl mx-auto px-4 py-8">
+<div class="mb-8 border border-slate-200 bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <span class="text-indigo-600">📅</span> Días de Envío y Promociones
+                </h2>
+                <p class="text-xs text-slate-500 mt-1">Resultados agrupados por semanas de junio y segmentación de promociones</p>
+            </div>
+            
+            <div class="border-b border-slate-200 flex flex-wrap lg:flex-nowrap overflow-x-auto custom-scrollbar" id="promoTabs">
+                <button onclick="switchTab('tabSemanas')" id="btn-tabSemanas" class="px-5 py-3 text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50 whitespace-nowrap transition">Resumen Semanal</button>
+                <button onclick="switchTab('tabPromo10')" id="btn-tabPromo10" class="px-5 py-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap transition">Promo 10%*2cuotas o mas</button>
+                <button onclick="switchTab('tabAdelantados')" id="btn-tabAdelantados" class="px-5 py-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap transition">Adelantados</button>
+                <button onclick="switchTab('tabPromo15')" id="btn-tabPromo15" class="px-5 py-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap transition">Promo 15%</button>
+                <button onclick="switchTab('tabActualiza')" id="btn-tabActualiza" class="px-5 py-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap transition">Actualiza Datos</button>
             </div>
 
-            <div class="mt-6">
-                <div class="card p-4 bg-white border border-slate-200">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4">Análisis Detallado por Grupo Atraso</h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full text-xs text-left">
-                            <thead class="bg-slate-100 text-[10px] uppercase tracking-wider text-slate-500">
-                                <tr>
-                                    <th class="px-3 py-2.5 font-bold rounded-tl-lg">Grupo Atraso</th>
-                                    <th class="px-3 py-2.5 font-bold text-center">Mensajes Enviados</th>
-                                    <th class="px-3 py-2.5 font-bold text-center">Pagos (0 a 7 días)</th>
-                                    <th class="px-3 py-2.5 font-bold text-center">Pagos (> 7 días)</th>
-                                    <th class="px-3 py-2.5 font-bold text-right text-emerald-600">Recaudo (0 a 7 días)</th>
-                                    <th class="px-3 py-2.5 font-bold text-right text-slate-600 rounded-tr-lg">Recaudo (> 7 días)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablaGrupoAtrasoBody" class="divide-y divide-slate-100 font-medium">
-                            </tbody>
-                            <tfoot class="bg-slate-200 font-bold sticky bottom-0">
-                                <tr>
-                                    <td class="px-3 py-2.5 text-slate-800 text-xs rounded-bl-lg">TOTAL</td>
-                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs" id="totalEnvGrupoAtraso">0</td>
-                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs" id="totalPagos0a7GrupoAtraso">0</td>
-                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs" id="totalPagosMayor7GrupoAtraso">0</td>
-                                    <td class="px-3 py-2.5 text-right text-emerald-600 font-black text-xs" id="totalRecaudo0a7GrupoAtraso">$0</td>
-                                    <td class="px-3 py-2.5 text-right text-slate-800 font-black text-xs rounded-br-lg" id="totalRecaudoMayor7GrupoAtraso">$0</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="mb-8">
-            <div class="border-b border-slate-200 pb-2 mb-4 flex justify-between items-center">
-                <h2 class="text-xs font-black text-slate-400 tracking-wider uppercase">Recaudo General de la mensajería enviada</h2>
-                <span class="text-xs text-slate-500 font-medium">Variación respecto al reporte del día anterior</span>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="card p-5 bg-white">
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Recaudo Actual Total</h3>
-                        <span class="text-[10px] font-black text-[#2b5cb3] bg-blue-50 px-2 py-0.5 rounded-md uppercase">Macro</span>
-                    </div>
-                    <p class="text-2xl font-black text-slate-800" id="totalRecaudoActual">$0</p>
-                    <div class="text-[11px] mt-1 font-semibold" id="diffRecaudoGlobal">Cargando variación...</div>
-                </div>
-
-                <div class="card p-5 bg-white">
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Presupuesto Inicial (Cuota)</h3>
-                        <span class="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md uppercase">Base</span>
-                    </div>
-                    <p class="text-2xl font-black text-slate-800" id="totalRecaudoEsperado">$0</p>
-                    <p class="text-[11px] text-slate-400 mt-1">Suma real de la columna Cuota completa</p>
-                </div>
-
-                <div class="card p-5 bg-white">
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Conversión General</h3>
-                        <span class="text-[10px] font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md uppercase">Efectividad</span>
-                    </div>
-                    <p class="text-2xl font-black text-slate-800" id="conversionGeneral">0%</p>
-                    <div class="text-[11px] mt-1 font-semibold" id="diffConversionGlobal">Cargando variación...</div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-6 mb-6">
-                <div class="card p-5">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4">📈 Curva de Recaudo Diario Acumulado (Evolución por Fecha de Pago)</h3>
-                    <div class="chart-container" style="height: 200px;">
-                        <canvas id="chartTendenciaDiaria"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="card p-4">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4">Recaudo por Medio de Pago</h3>
-                    <div class="chart-container">
-                        <canvas id="chartMedioPago"></canvas>
-                    </div>
-                </div>
-
-                <div class="card p-4">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4">Recaudo por Regional</h3>
-                    <div class="chart-container">
-                        <canvas id="chartRegional"></canvas>
-                    </div>
-                </div>
-
-                <div class="card p-4">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4">Recaudo por Número de Cuotas</h3>
-                    <div class="overflow-y-auto" style="max-height: 300px;">
-                        <table class="min-w-full text-xs">
-                            <thead class="bg-slate-100 sticky top-0 z-10">
-                                <tr>
-                                    <th class="px-3 py-2 text-left font-bold text-slate-600 text-[10px] uppercase tracking-wider rounded-tl-lg">Categoría</th>
-                                    <th class="px-3 py-2 text-right font-bold text-slate-600 text-[10px] uppercase tracking-wider">Recaudo</th>
-                                    <th class="px-3 py-2 text-center font-bold text-slate-600 text-[10px] uppercase tracking-wider rounded-tr-lg">%</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablaCategoriaBody" class="divide-y divide-slate-100">
-                            </tbody>
-                            <tfoot class="bg-slate-200 font-bold sticky bottom-0">
-                                <tr>
-                                    <td class="px-3 py-2.5 text-slate-800 text-xs rounded-bl-lg">TOTAL</td>
-                                    <td class="px-3 py-2.5 text-right text-[#2b5cb3] font-black text-xs" id="totalRecaudoCategoria">$0</td>
-                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs rounded-br-lg">100%</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="card p-6 md:col-span-2">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4">Cuota vs Pago Actual por Regional</h3>
-                    <div class="chart-container-tall">
-                        <canvas id="chartComparativa"></canvas>
-                    </div>
-                </div>
-
-                <div class="card p-6 md:col-span-1">
-                    <h3 class="text-sm font-bold text-slate-700 mb-4">Mensajes Enviados VS Mensajes Pagos</h3>
-                    <div class="chart-container-tall">
-                        <canvas id="chartEmbudo"></canvas>
-                    </div>
-                    
-                    <div class="mt-6 space-y-3">
-                        <div class="flex justify-between items-center p-3 bg-slate-50 border border-slate-200 rounded-xl shadow-sm">
-                            <span class="text-xs font-semibold text-slate-600">Mensajes Enviados Generales</span>
-                            <span class="text-lg font-bold text-slate-800" id="totalMensajes">0</span>
-                        </div>
-                        <div class="flex justify-between items-center p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl shadow-sm">
-                            <span class="text-xs font-semibold text-indigo-700">Prom. Env. por Contrato</span>
-                            <span class="text-lg font-bold text-indigo-800" id="promedioPorContrato">0</span>
-                        </div>
-                        <div class="flex justify-between items-center p-3 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm">
-                            <span class="text-xs font-semibold text-[#2b5cb3]">Pagos Realizados Globales</span>
-                            <span class="text-lg font-bold text-[#2b5cb3]" id="totalPagos">0</span>
+            <div class="p-4 md:p-6 bg-slate-50/30">
+                <!-- Tab: Semanas -->
+                <div id="tabSemanas" class="tab-content block animate-[fadeIn_0.3s_ease-out]">
+                    <div class="bg-white border border-indigo-100 rounded-xl p-5 shadow-sm w-full">
+                        <h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider mb-4 border-b border-indigo-50 pb-2">Resultados por Semana de Junio</h3>
+                        <p class="text-xs text-slate-500 mb-4">Calculado en base a la Fecha de Envío de la mensajería.</p>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm text-left">
+                                <thead class="bg-indigo-50 text-xs text-indigo-800 uppercase tracking-wider">
+                                    <tr>
+                                        <th class="px-3 py-2.5 font-bold rounded-tl-lg">Semana</th>
+                                        <th class="px-3 py-2.5 font-bold text-right">Recaudo Semanal</th>
+                                        <th class="px-3 py-2.5 font-bold text-center rounded-tr-lg">Pagos (0 a 7 días)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaSemanasBody" class="divide-y divide-indigo-50/50">
+                                </tbody>
+                                <tfoot class="bg-indigo-100/50 font-bold">
+                                    <tr>
+                                        <td class="px-3 py-3 text-indigo-900 rounded-bl-lg text-xs">TOTALES</td>
+                                        <td class="px-3 py-3 text-right text-emerald-700 text-sm" id="totalRecSemanas">$0</td>
+                                        <td class="px-3 py-3 text-center text-slate-800 text-sm rounded-br-lg" id="totalPagSemanas">0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-
-        <section class="mb-8 p-6 bg-gradient-to-br from-[#eef4ff] to-[#d9e7ff] border border-[#bcd4ff] rounded-2xl shadow-sm text-slate-800">
+                <!-- Tab: Promo 10%*2 cuotas o mas -->
+                <div id="tabPromo10" class="tab-content hidden animate-[fadeIn_0.3s_ease-out]">
+                    <div>
             <div class="pb-3 mb-5 flex justify-between items-center flex-wrap gap-2 border-b border-[#bcd4ff]/50">
                 <div>
                     <span class="bg-[#2b5cb3] text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider shadow-sm">Métrica Prioritaria</span>
@@ -424,10 +197,15 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
 
-        <section class="mb-8 p-6 bg-gradient-to-br from-[#e8f5e9] to-[#c8e6c9] border border-[#81c784] rounded-2xl shadow-sm text-slate-800">
+        
+                </div>
+
+                <!-- Tab: Adelantados -->
+                <div id="tabAdelantados" class="tab-content hidden animate-[fadeIn_0.3s_ease-out]">
+                    <div>
             <div class="pb-3 mb-5 flex justify-between items-center flex-wrap gap-2 border-b border-[#81c784]/50">
                 <div>
                     <span class="bg-green-700 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider shadow-sm">Período Específico</span>
@@ -572,10 +350,15 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
         <!-- Sección Promoción 15% -->
-        <section class="mb-10" id="seccionQuince">
+        
+                </div>
+
+                <!-- Tab: Promo 15% votacion -->
+                <div id="tabPromo15" class="tab-content hidden animate-[fadeIn_0.3s_ease-out]">
+                    <div>
             <div class="mb-6 flex items-center justify-between border-b pb-4">
                 <div>
                     <h2 class="text-3xl font-bold text-slate-800 mt-2">Mensajeria Promocion 15% 2 cuotas o mas por votacion</h2>
@@ -588,7 +371,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-bold text-green-700 uppercase tracking-wider">Recaudo Objetivo</span>
-                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded">Promo 15% >= 2</span>
+                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded">Promo 15% votacion >= 2</span>
                         </div>
                         <p class="text-3xl font-black text-[#2b5cb3] my-2" id="kpiSumaQuinceMasDos">$0</p>
                         <p class="text-xs text-slate-500 font-medium">Monto recolectado de usuarios con 15% y 2 o más cuotas.</p>
@@ -660,9 +443,14 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <section class="mb-8 p-6 bg-slate-100 border border-slate-300 rounded-2xl shadow-inner">
+        
+                </div>
+
+                <!-- Tab: Actualizados -->
+                <div id="tabActualiza" class="tab-content hidden animate-[fadeIn_0.3s_ease-out]">
+                    <div>
             <div class="border-b border-slate-300 pb-4 mb-6">
                 <span class="bg-indigo-600 text-white text-xs font-bold uppercase px-3 py-1 rounded-full">Sección Especial</span>
                 <h2 class="text-3xl font-bold text-slate-800 mt-2">Mensajeria Actualiza datos promocion 10% 2 cuotas o mas</h2>
@@ -777,21 +565,254 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+                </div>
+            </div>
+        </div>
+<div class="mb-8">
+            <div class="border-b border-slate-200 pb-2 mb-4 flex justify-between items-center">
+                <div class="flex justify-between items-center w-full">
+                <h2 class="text-xs font-black text-slate-400 tracking-wider uppercase">RESUMEN GENERAL DE TODO EL ENVIO DE MENSAJERIA</h2>
+                <div class="flex items-center gap-2">
+                    <label for="monthSelect" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Mes:</label>
+                    <select id="monthSelect" onchange="loadData()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 font-bold shadow-sm cursor-pointer hover:bg-slate-100 transition">
+                        <option value="1426464879">Junio 2026</option>
+                        <option value="421865243">Julio 2026</option>
+                    </select>
+                </div>
+            </div>
+                <span class="text-xs text-slate-500 font-medium">Variación respecto al reporte del día anterior</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card p-5 bg-white">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Recaudo Actual Total</h3>
+                        <span class="text-[10px] font-black text-[#2b5cb3] bg-blue-50 px-2 py-0.5 rounded-md uppercase">Macro</span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-800" id="totalRecaudoActual">$0</p>
+                    <div class="text-[11px] mt-1 font-semibold" id="diffRecaudoGlobal">Cargando variación...</div>
+                </div>
 
-    </div>
+                <div class="card p-5 bg-white">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Presupuesto Inicial (Cuota)</h3>
+                        <span class="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md uppercase">Base</span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-800" id="totalRecaudoEsperado">$0</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Suma real de la columna Cuota completa</p>
+                </div>
 
-    <script>
+                <div class="card p-5 bg-white">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Conversión General</h3>
+                        <span class="text-[10px] font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md uppercase">Efectividad</span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-800" id="conversionGeneral">0%</p>
+                    <div class="text-[11px] mt-1 font-semibold" id="diffConversionGlobal">Cargando variación...</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 mb-6">
+                <div class="card p-5">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">📈 Curva de Recaudo Semanal Acumulado (Evolución por Fecha de Pago)</h3>
+                    <div class="chart-container" style="height: 200px;">
+                        <canvas id="chartTendenciaDiaria"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Recaudo por Medio de Pago</h3>
+                    <div class="chart-container">
+                        <canvas id="chartMedioPago"></canvas>
+                    </div>
+                </div>
+
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Recaudo por Regional</h3>
+                    <div class="chart-container">
+                        <canvas id="chartRegional"></canvas>
+                    </div>
+                </div>
+
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Recaudo por Número de Cuotas</h3>
+                    <div class="overflow-y-auto" style="max-height: 300px;">
+                        <table class="min-w-full text-xs">
+                            <thead class="bg-slate-100 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-3 py-2 text-left font-bold text-slate-600 text-[10px] uppercase tracking-wider rounded-tl-lg">Categoría</th>
+                                    <th class="px-3 py-2 text-right font-bold text-slate-600 text-[10px] uppercase tracking-wider">Recaudo</th>
+                                    <th class="px-3 py-2 text-center font-bold text-slate-600 text-[10px] uppercase tracking-wider rounded-tr-lg">%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaCategoriaBody" class="divide-y divide-slate-100">
+                            </tbody>
+                            <tfoot class="bg-slate-200 font-bold sticky bottom-0">
+                                <tr>
+                                    <td class="px-3 py-2.5 text-slate-800 text-xs rounded-bl-lg">TOTAL</td>
+                                    <td class="px-3 py-2.5 text-right text-[#2b5cb3] font-black text-xs" id="totalRecaudoCategoria">$0</td>
+                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs rounded-br-lg">100%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card p-6 md:col-span-2">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Cuota vs Pago Actual por Regional</h3>
+                    <div class="chart-container-tall">
+                        <canvas id="chartComparativa"></canvas>
+                    </div>
+                </div>
+
+                <div class="card p-6 md:col-span-1">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Mensajes Enviados VS Mensajes Pagos</h3>
+                    <div class="chart-container-tall">
+                        <canvas id="chartEmbudo"></canvas>
+                    </div>
+                    
+                    <div class="mt-6 space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-slate-50 border border-slate-200 rounded-xl shadow-sm">
+                            <span class="text-xs font-semibold text-slate-600">Mensajes Enviados Generales</span>
+                            <span class="text-lg font-bold text-slate-800" id="totalMensajes">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl shadow-sm">
+                            <span class="text-xs font-semibold text-indigo-700">Prom. Env. por Contrato</span>
+                            <span class="text-lg font-bold text-indigo-800" id="promedioPorContrato">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm">
+                            <span class="text-xs font-semibold text-[#2b5cb3]">Pagos Realizados Globales</span>
+                            <span class="text-lg font-bold text-[#2b5cb3]" id="totalPagos">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div class="mb-8 p-6 bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-2xl shadow-sm">
+            <div class="border-b border-slate-200 pb-3 mb-5">
+                <span class="bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider shadow-sm">Atribución de Efectividad</span>
+                <h2 class="text-xl font-extrabold mt-2 text-slate-800">Análisis por Tiempos de Pago</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Tarjeta 0 a 7 días -->
+                <div class="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm flex flex-col">
+                    <span class="text-xs text-emerald-700 font-bold uppercase tracking-wider block mb-2">Pagos entre 0 a 7 días después del envío</span>
+                    <div class="flex justify-between items-end mt-2">
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold mb-1">Recaudo Efectivo</p>
+                            <p class="text-3xl font-black text-emerald-600" id="recaudo0a7">$0</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 font-semibold mb-1">Efectividad</p>
+                            <p class="text-2xl font-bold text-emerald-700" id="efectividad0a7">0%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between">
+                        <span class="text-xs font-semibold text-slate-500">Cantidad de Pagos: <strong class="text-slate-700" id="conteoPagos0a7">0</strong></span>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Por Grupo Atraso</span>
+                        <div class="flex flex-wrap gap-2" id="tagsGrupoAtraso0a7"></div>
+                    </div>
+                </div>
+
+                <!-- Tarjeta > 7 días -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                    <span class="text-xs text-slate-600 font-bold uppercase tracking-wider block mb-2">Pagos después de 7 días del envío (Dato Estadístico)</span>
+                    <div class="flex justify-between items-end mt-2">
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold mb-1">Recaudo Tardío</p>
+                            <p class="text-3xl font-black text-slate-700" id="recaudoMayor7">$0</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 font-semibold mb-1">Efectividad Tardía</p>
+                            <p class="text-2xl font-bold text-slate-600" id="efectividadMayor7">0%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between">
+                        <span class="text-xs font-semibold text-slate-500">Cantidad de Pagos: <strong class="text-slate-700" id="conteoPagosMayor7">0</strong></span>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Por Grupo Atraso</span>
+                        <div class="flex flex-wrap gap-2" id="tagsGrupoAtrasoMayor7"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <div class="card p-4 bg-white border border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4">Análisis Detallado por Grupo Atraso</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-xs text-left">
+                            <thead class="bg-slate-100 text-[10px] uppercase tracking-wider text-slate-500">
+                                <tr>
+                                    <th class="px-3 py-2.5 font-bold rounded-tl-lg">Grupo Atraso</th>
+                                    <th class="px-3 py-2.5 font-bold text-center">Mensajes Enviados</th>
+                                    <th class="px-3 py-2.5 font-bold text-center">Pagos (0 a 7 días)</th>
+                                    <th class="px-3 py-2.5 font-bold text-center">Pagos (> 7 días)</th>
+                                    <th class="px-3 py-2.5 font-bold text-right text-emerald-600">Recaudo (0 a 7 días)</th>
+                                    <th class="px-3 py-2.5 font-bold text-right text-slate-600 rounded-tr-lg">Recaudo (> 7 días)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaGrupoAtrasoBody" class="divide-y divide-slate-100 font-medium">
+                            </tbody>
+                            <tfoot class="bg-slate-200 font-bold sticky bottom-0">
+                                <tr>
+                                    <td class="px-3 py-2.5 text-slate-800 text-xs rounded-bl-lg">TOTAL</td>
+                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs" id="totalEnvGrupoAtraso">0</td>
+                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs" id="totalPagos0a7GrupoAtraso">0</td>
+                                    <td class="px-3 py-2.5 text-center text-slate-800 text-xs" id="totalPagosMayor7GrupoAtraso">0</td>
+                                    <td class="px-3 py-2.5 text-right text-emerald-600 font-black text-xs" id="totalRecaudo0a7GrupoAtraso">$0</td>
+                                    <td class="px-3 py-2.5 text-right text-slate-800 font-black text-xs rounded-br-lg" id="totalRecaudoMayor7GrupoAtraso">$0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+</main>
+<script>
+            function switchTab(tabId) {
+                document.querySelectorAll('.tab-content').forEach(el => {
+                    el.classList.add('hidden');
+                    el.classList.remove('block');
+                });
+                const buttons = ['btn-tabSemanas', 'btn-tabPromo10', 'btn-tabAdelantados', 'btn-tabPromo15', 'btn-tabActualiza'];
+                buttons.forEach(id => {
+                    const btn = document.getElementById(id);
+                    if(btn) {
+                        btn.className = "px-5 py-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap transition";
+                    }
+                });
+                document.getElementById(tabId).classList.remove('hidden');
+                document.getElementById(tabId).classList.add('block');
+                const activeBtn = document.getElementById('btn-' + tabId);
+                if(activeBtn) {
+                    activeBtn.className = "px-5 py-3 text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50 whitespace-nowrap transition";
+                }
+            }
+        </script>
+
+<script>
         let CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSYgitljjICa1hyaX1iOrAsjg-RFyM8ruiRDuww6mBL1CRalpXu06l8b-3rQvOofdz4MIXX7PmHymam/pub?output=csv';
         
         function changeMonth() {
-            const gid = document.getElementById('monthSelect').value;
+            const monthEl = document.getElementById('monthSelect');
+            const gid = monthEl ? monthEl.value : '1426464879';
             const baseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSYgitljjICa1hyaX1iOrAsjg-RFyM8ruiRDuww6mBL1CRalpXu06l8b-3rQvOofdz4MIXX7PmHymam/pub?output=csv';
             // Se debe agregar single=true para que Google Sheets respete el parámetro gid y t= para evitar caché
             const ts = new Date().getTime();
             CSV_URL = gid ? baseUrl + '&single=true&gid=' + gid + '&t=' + ts : baseUrl + '&t=' + ts;
             document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('loading').classList.remove('hidden');
             loadData();
         }
 
@@ -850,7 +871,8 @@
                 mesPagoH: h.indexOf('MES PAGO HASTA'),
                 tipoDeEnvio: h.indexOf('TIPO DE MENSAJE'),
                 diasPago: h.indexOf('DIAS DE PAGO'),
-                grupoAtraso: h.indexOf('ATRASO')
+                grupoAtraso: h.indexOf('ATRASO'),
+                fechaEnvio: h.indexOf('FECHA DE ENVIO')
             };
         }
 
@@ -874,7 +896,12 @@
                     categoria: columnMap.categoria !== -1 ? normalizeString(row[columnMap.categoria]) : 'SIN ASIGNAR',
                     resultado: columnMap.resultado !== -1 ? normalizeString(row[columnMap.resultado]) : 'SIN ASIGNAR',
                     fechaPago: columnMap.fechaPago !== -1 ? normalizeString(row[columnMap.fechaPago]) : '0',
-                    cuotasPagadas: columnMap.cuotasPagadas !== -1 ? parseNumber(row[columnMap.cuotasPagadas]) : 0,
+                    cuotasPagadas: (function() {
+                        let c = columnMap.cuotasPagadas !== -1 ? parseNumber(row[columnMap.cuotasPagadas]) : 0;
+                        if (c >= 1.3 && c < 2) return 2;
+                        return c;
+                    })(),
+                    fechaEnvioOriginal: columnMap.fechaEnvio !== -1 ? normalizeString(row[columnMap.fechaEnvio]) : '0',
                     cuota: columnMap.cuota !== -1 ? parseNumber(row[columnMap.cuota]) : 0,
                     pagoActual: columnMap.pagoActual !== -1 ? parseNumber(row[columnMap.pagoActual]) : 0,
                     mesPagoH: columnMap.mesPagoH !== -1 ? normalizeString(row[columnMap.mesPagoH]) : '', 
@@ -904,6 +931,15 @@
                 grupoAtraso0a7: {},
                 grupoAtrasoMayor7: {},
 
+                
+                semanasJunio: {
+                    'Semana 1 (1 al 7)': { recaudo: 0, pagos0a7: 0 },
+                    'Semana 2 (8 al 14)': { recaudo: 0, pagos0a7: 0 },
+                    'Semana 3 (15 al 21)': { recaudo: 0, pagos0a7: 0 },
+                    'Semana 4 (22 al 28)': { recaudo: 0, pagos0a7: 0 },
+                    'Semana 5 (29 al 30)': { recaudo: 0, pagos0a7: 0 },
+                    'Otra Fecha': { recaudo: 0, pagos0a7: 0 }
+                },
                 totalGlobal: data.length,
                 metaFijaObjetivo: 628494025,
                 recaudoMayorIgualDosCuotas: 0,
@@ -932,7 +968,6 @@
             data.forEach(record => {
                 if (record.esPagoEfectivo) {
                     kpis.totalRecaudoActual += record.pagoActual;
-                    kpis.totalRecaudoEfectivo += record.pagoActual;
                 }
                 kpis.totalRecaudoEsperado += record.cuota;
                 
@@ -959,6 +994,47 @@
                 // Conteo específico del segmento azul (Métrica prioritaria)
                 if (record.tipoDeEnvio === 'ANTICIPADO 0 A -10 DIAS') {
                     kpis.mensajesEnviadosDin += 1;
+                }
+
+                
+                // Parse date logic
+                const parseDateStr = (str) => {
+                    if (!str || str === '0' || str === 'SIN ASIGNAR') return null;
+                    const parts = str.split('/');
+                    if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+                    if (str.includes('-')) {
+                        const p = str.split('-');
+                        if(p.length === 3) return new Date(p[0], p[1]-1, p[2]);
+                    }
+                    return null;
+                };
+
+                let fEnvio = parseDateStr(record.fechaEnvioOriginal);
+                if (!fEnvio && record.pagoActual > 0) {
+                    const fP = parseDateStr(record.fechaPago);
+                    if (fP && !isNaN(record.diasPago)) {
+                        const newFP = new Date(fP.getTime());
+                        newFP.setDate(newFP.getDate() - record.diasPago);
+                        fEnvio = newFP;
+                    }
+                }
+
+                if (record.pagoActual > 0 && fEnvio) {
+                    let sem = 'Otra Fecha';
+                    if (fEnvio.getMonth() === 5) {
+                        const day = fEnvio.getDate();
+                        if (day <= 7) sem = 'Semana 1 (1 al 7)';
+                        else if (day <= 14) sem = 'Semana 2 (8 al 14)';
+                        else if (day <= 21) sem = 'Semana 3 (15 al 21)';
+                        else if (day <= 28) sem = 'Semana 4 (22 al 28)';
+                        else sem = 'Semana 5 (29 al 30)';
+                    }
+                    if (kpis.semanasJunio && kpis.semanasJunio[sem]) {
+                        if (record.esPagoEfectivo) {
+                            kpis.semanasJunio[sem].recaudo += record.pagoActual;
+                            kpis.semanasJunio[sem].pagos0a7 += 1;
+                        }
+                    }
                 }
 
                 const esActualizado = record.resultado === 'ACTUALIZADO';
@@ -1018,7 +1094,7 @@
                 const ultimaF = sortingFechas[sortingFechas.length - 1];
                 const penultimaF = sortingFechas[sortingFechas.length - 2];
 
-                document.getElementById('cruceFechas').textContent = `${penultimaF} VS ${ultimaF}`;
+                const cruce = document.getElementById('cruceFechas'); if(cruce) cruce.textContent = `${penultimaF} VS ${ultimaF}`;
 
                 kpis.ultimoReporte.recaudoGlobal = timeline[ultimaF].recaudo;
                 kpis.ultimoReporte.recaudoEspecial = timeline[ultimaF].recaudoEsp;
@@ -1028,7 +1104,7 @@
                 kpis.penultimoReporte.recaudoEspecial = timeline[penultimaF].recaudoEsp;
                 kpis.penultimoReporte.conversion = timeline[penultimaF].mensajesSegmento > 0 ? (timeline[penultimaF].pagosSegmento / timeline[penultimaF].mensajesSegmento) * 100 : 0;
             } else {
-                document.getElementById('cruceFechas').textContent = "Esperando histórico diario...";
+                const cruce2 = document.getElementById('cruceFechas'); if(cruce2) cruce2.textContent = "Esperando histórico diario...";
             }
 
             kpis.mensajesFaltantesDin = Math.max(0, kpis.metaMensajesGlobal - kpis.mensajesEnviadosDin);
@@ -1428,6 +1504,8 @@
 
             data.forEach(record => {
                 const medio = record.medioPago;
+                
+
                 const esActualizado = record.resultado === 'ACTUALIZADO';
                 
                 if (record.cuotasPagadas >= 2) {
@@ -1567,13 +1645,69 @@
             
             document.getElementById('kpiTotalActualizadosGlobal').textContent = formatNumber(kpis.totalActualizadosGlobal);
 
-            createLineChart('chartTendenciaDiaria', kpis.fechasOrdenadas, kpis.fechasOrdenadas.map(f => kpis.recLinealChart[f]));
+            
+            // Group by week for the chart
+            const weekData = {};
+            kpis.fechasOrdenadas.forEach(f => {
+                const parts = f.split('/');
+                if (parts.length === 3) {
+                    const date = new Date(parts[2], parts[1] - 1, parts[0]);
+                    let sem = 'Otra Semana';
+                    const m = date.getMonth();
+                    if (m === 5) {
+                        const d = date.getDate();
+                        if (d <= 7) sem = 'S1 Junio';
+                        else if (d <= 14) sem = 'S2 Junio';
+                        else if (d <= 21) sem = 'S3 Junio';
+                        else if (d <= 28) sem = 'S4 Junio';
+                        else sem = 'S5 Junio';
+                    } else if (m === 6) {
+                        const d = date.getDate();
+                        if (d <= 7) sem = 'S1 Julio';
+                        else if (d <= 14) sem = 'S2 Julio';
+                        else if (d <= 21) sem = 'S3 Julio';
+                        else if (d <= 28) sem = 'S4 Julio';
+                        else sem = 'S5 Julio';
+                    }
+                    if (!weekData[sem]) weekData[sem] = 0;
+                    weekData[sem] += kpis.recLinealChart[f];
+                }
+            });
+            const weekLabels = Object.keys(weekData);
+            const weekValues = weekLabels.map(s => weekData[s]);
+            createLineChart('chartTendenciaDiaria', weekLabels, weekValues);
+
 
             setTimeout(() => {
                 document.getElementById('espProgressCumplimiento').style.width = Math.min(kpis.porcentajeCumplimientoEspecial, 100) + '%';
             }, 100);
 
-            document.getElementById('lastUpdate').textContent = getCurrentDateTime();
+            
+            // Render Semanas Junio
+            let htmlSemanas = '';
+            let totalRecSemanas = 0;
+            let totalPagSemanas = 0;
+            Object.keys(kpis.semanasJunio).forEach(sem => {
+                if(kpis.semanasJunio[sem].recaudo > 0 || kpis.semanasJunio[sem].pagos0a7 > 0) {
+                    htmlSemanas += `
+                        <tr class="hover:bg-indigo-50 transition border-b border-indigo-100/50">
+                            <td class="px-3 py-3 font-semibold text-indigo-900">${sem}</td>
+                            <td class="px-3 py-3 text-right font-black text-emerald-600">${formatCurrency(kpis.semanasJunio[sem].recaudo)}</td>
+                            <td class="px-3 py-3 text-center font-bold text-slate-700">${formatNumber(kpis.semanasJunio[sem].pagos0a7)}</td>
+                        </tr>
+                    `;
+                    totalRecSemanas += kpis.semanasJunio[sem].recaudo;
+                    totalPagSemanas += kpis.semanasJunio[sem].pagos0a7;
+                }
+            });
+            const tablaSemanas = document.getElementById('tablaSemanasBody');
+            if (tablaSemanas) {
+                tablaSemanas.innerHTML = htmlSemanas || '<tr><td colspan="3" class="px-3 py-4 text-center text-slate-400">Sin registros en Junio</td></tr>';
+                document.getElementById('totalRecSemanas').textContent = formatCurrency(totalRecSemanas);
+                document.getElementById('totalPagSemanas').textContent = formatNumber(totalPagSemanas);
+            }
+
+            document.getElementById('lastUpdated').textContent = getCurrentDateTime();
         }
 
         function createDoughnutChart(canvasId, labels, data, isCurrency = true, customColors = null) {
@@ -1809,7 +1943,7 @@
         }
 
         function hideLoading() {
-            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('loading').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
         }
 
