@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Conversión Mensajería</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Díashboard Conversión Mensajería</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
@@ -23,12 +23,18 @@
                 </div>
             </div>
             
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                    <label for="monthSelect" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Mes:</label>
+                    <select id="monthSelect" onchange="changeMonth()" class="bg-transparent text-slate-700 text-sm outline-none focus:ring-0 border-none p-1 font-bold cursor-pointer transition">
+                        <option value="0">Junio 2026</option>
+                        <option value="126771446">Julio 2026</option>
+                    </select>
+                </div>
                 <div class="text-right hidden sm:block">
                     <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Última actualización</p>
                     <p class="text-sm font-semibold text-slate-700" id="lastUpdated">Cargando...</p>
                 </div>
-                <button onclick="loadData()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 p-2.5 rounded-lg transition-colors border border-indigo-100 group" title="Recargar datos">
+                <button onclick="changeMonth()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 p-2.5 rounded-lg transition-colors border border-indigo-100 group" title="Recargar datos">
                     <svg class="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 </button>
             </div>
@@ -57,13 +63,17 @@
                 <button onclick="switchTab('tabAdelantados')" id="btn-tabAdelantados" class="px-5 py-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap transition">Adelantados</button>
                 <button onclick="switchTab('tabPromo15')" id="btn-tabPromo15" class="px-5 py-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap transition">Promo 15%</button>
                 <button onclick="switchTab('tabActualiza')" id="btn-tabActualiza" class="px-5 py-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap transition">Actualiza Datos</button>
+                <!-- Tabs Julio -->
+                <button onclick="switchTab('tabCobroMora')" id="btn-tabCobroMora" class="px-5 py-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap transition hidden">Cobro Mora</button>
+                <button onclick="switchTab('tabRenovacion')" id="btn-tabRenovacion" class="px-5 py-3 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 hover:bg-slate-50 whitespace-nowrap transition hidden">Renovación Semestre</button>
+
             </div>
 
             <div class="p-4 md:p-6 bg-slate-50/30">
                 <!-- Tab: Semanas -->
                 <div id="tabSemanas" class="tab-content block animate-[fadeIn_0.3s_ease-out]">
                     <div class="bg-white border border-indigo-100 rounded-xl p-5 shadow-sm w-full">
-                        <h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider mb-4 border-b border-indigo-50 pb-2">Resultados por Semana de Junio</h3>
+                        <h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider mb-4 border-b border-indigo-50 pb-2">Resultados por Semana</h3>
                         <p class="text-xs text-slate-500 mb-4">Calculado en base a la Fecha de Envío de la mensajería.</p>
                         
                         <div class="overflow-x-auto">
@@ -198,6 +208,8 @@
                 </div>
             </div>
         </div>
+    <main id="dashboard" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-[fadeIn_0.5s_ease-out]">
+
 
 
         
@@ -278,7 +290,7 @@
                     <div>
                         <span class="text-xs text-green-800 font-bold uppercase tracking-wider block mb-1">Total Pagos Realizados</span>
                         <p class="text-2xl font-black text-green-700" id="julio2026TotalPagos">0</p>
-                        <span class="text-[10px] text-slate-400 block mt-2">Transacciones efectivas registradas</span>
+                        <span class="text-[10px] text-slate-400 block mt-2">Transacciones efectivas registradías</span>
                     </div>
                 </div>
 
@@ -465,7 +477,7 @@
                             <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded">Actualizados >= 2</span>
                         </div>
                         <p class="text-3xl font-black text-[#2b5cb3] my-2" id="kpiSumaActualizadosMasDos">$0</p>
-                        <p class="text-xs text-slate-500 font-medium">Monto total recolectado de usuarios actualizados con 2 o más cuotas pagadas.</p>
+                        <p class="text-xs text-slate-500 font-medium">Monto total recolectado de usuarios actualizados con 2 o más cuotas pagadías.</p>
                     </div>
                     <div class="mt-3 flex justify-between border-t border-green-100 pt-2">
                         <div>
@@ -478,6 +490,8 @@
                         </div>
                     </div>
                 </div>
+                
+
 
                 <div class="card bg-white border border-amber-300 p-5 flex flex-col justify-between shadow-sm">
                     <div>
@@ -486,7 +500,7 @@
                             <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-0.5 rounded">Actualizados &lt; 2</span>
                         </div>
                         <p class="text-3xl font-black text-amber-600 my-2" id="kpiSumaActualizadosMenosDos">$0</p>
-                        <p class="text-xs text-slate-500 font-medium">Monto total recolectado de usuarios actualizados con menos de 2 cuotas pagadas.</p>
+                        <p class="text-xs text-slate-500 font-medium">Monto total recolectado de usuarios actualizados con menos de 2 cuotas pagadías.</p>
                     </div>
                     <div class="mt-3 flex justify-between border-t border-amber-100 pt-2">
                         <div>
@@ -516,7 +530,7 @@
                 <div class="card p-6 bg-white border border-slate-200 shadow-sm xl:col-span-2">
                     <div class="mb-4">
                         <h3 class="text-lg font-bold text-slate-800">Resultado por Medio de Pago (Cruce Especial)</h3>
-                        <p class="text-xs text-slate-500">Métricas avanzadas que calculan la efectividad de conversión total integrando el desempeño de ambos segmentos</p>
+                        <p class="text-xs text-slate-500">Métricas avanzadías que calculan la efectividad de conversión total integrando el desempeño de ambos segmentos</p>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm text-left text-slate-600">
@@ -567,19 +581,29 @@
             </div>
         </div>
                 </div>
+
+<!-- Tab: Cobro Mora -->
+            <div id="tabCobroMora" class="tab-content hidden animate-[fadeIn_0.3s_ease-out]">
+                <div class="p-6 md:p-8">
+                    <div id="contentCobroMora"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Renovacion -->
+            <div id="tabRenovacion" class="tab-content hidden animate-[fadeIn_0.3s_ease-out]">
+                <div class="p-6 md:p-8">
+                    <div id="contentRenovacion"></div>
+                </div>
+            </div>
+
+
             </div>
         </div>
 <div class="mb-8">
             <div class="border-b border-slate-200 pb-2 mb-4 flex justify-between items-center">
                 <div class="flex justify-between items-center w-full">
                 <h2 class="text-xs font-black text-slate-400 tracking-wider uppercase">RESUMEN GENERAL DE TODO EL ENVIO DE MENSAJERIA</h2>
-                <div class="flex items-center gap-2">
-                    <label for="monthSelect" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Mes:</label>
-                    <select id="monthSelect" onchange="loadData()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 font-bold shadow-sm cursor-pointer hover:bg-slate-100 transition">
-                        <option value="1426464879">Junio 2026</option>
-                        <option value="421865243">Julio 2026</option>
-                    </select>
-                </div>
+                
             </div>
                 <span class="text-xs text-slate-500 font-medium">Variación respecto al reporte del día anterior</span>
             </div>
@@ -778,14 +802,22 @@
             </div>
         </div>
 
-</main>
+
+            
+
+            
+
+        
+
+            </main>
+
 <script>
             function switchTab(tabId) {
                 document.querySelectorAll('.tab-content').forEach(el => {
                     el.classList.add('hidden');
                     el.classList.remove('block');
                 });
-                const buttons = ['btn-tabSemanas', 'btn-tabPromo10', 'btn-tabAdelantados', 'btn-tabPromo15', 'btn-tabActualiza'];
+                const buttons = ['btn-tabSemanas', 'btn-tabPromo10', 'btn-tabAdelantados', 'btn-tabPromo15', 'btn-tabActualiza', 'btn-tabCobroMora', 'btn-tabRenovacion'];
                 buttons.forEach(id => {
                     const btn = document.getElementById(id);
                     if(btn) {
@@ -804,11 +836,43 @@
 <script>
         let CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSYgitljjICa1hyaX1iOrAsjg-RFyM8ruiRDuww6mBL1CRalpXu06l8b-3rQvOofdz4MIXX7PmHymam/pub?output=csv';
         
-        function changeMonth() {
+                function changeMonth() {
             const monthEl = document.getElementById('monthSelect');
-            const gid = monthEl ? monthEl.value : '1426464879';
+            const gid = monthEl ? monthEl.value : '0';
+            const isJulio = gid === '126771446';
+            
+            // Toggle tab buttons
+            const junioBtns = ['btn-tabPromo10', 'btn-tabAdelantados', 'btn-tabPromo15', 'btn-tabActualiza'];
+            const alwaysBtns = ['btn-tabSemanas'];
+            alwaysBtns.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'inline-block'; });
+            junioBtns.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.style.display = isJulio ? 'none' : 'inline-block';
+            });
+            const julioBtns = ['btn-tabCobroMora', 'btn-tabRenovacion'];
+            julioBtns.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.style.display = isJulio ? 'inline-block' : 'none';
+            });
+            
+            // Switch to default tab for the month
+            if (isJulio) {
+                switchTab('tabCobroMora');
+            } else {
+                switchTab('tabSemanas');
+            }
+            
+            // Update title
+            const titleEl = document.querySelector('#promoTabs').previousElementSibling.querySelector('h2');
+            if(titleEl) {
+                titleEl.innerHTML = `<span class="text-indigo-600">📅</span> Promociones ${isJulio ? 'Julio' : 'Junio'}`;
+            }
+            const subtitleEl = document.querySelector('#promoTabs').previousElementSibling.querySelector('p');
+            if (subtitleEl) {
+                subtitleEl.innerHTML = `Resultados agrupados por promociones de ${isJulio ? 'julio' : 'junio'}`;
+            }
+            
             const baseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSYgitljjICa1hyaX1iOrAsjg-RFyM8ruiRDuww6mBL1CRalpXu06l8b-3rQvOofdz4MIXX7PmHymam/pub?output=csv';
-            // Se debe agregar single=true para que Google Sheets respete el parámetro gid y t= para evitar caché
             const ts = new Date().getTime();
             CSV_URL = gid ? baseUrl + '&single=true&gid=' + gid + '&t=' + ts : baseUrl + '&t=' + ts;
             document.getElementById('dashboard').classList.add('hidden');
@@ -865,11 +929,11 @@
                 pagoActual: h.indexOf('PAGO'),      
                 fechaPago: h.indexOf('FECHA DE PAGO'),       
                 cuota: h.indexOf('CUOTA'),           
-                cuotasPagadas: h.indexOf('CUOTAS QUE PAGARON'),   
+                cuotasPagadías: h.indexOf('CUOTAS QUE PAGARON'),   
                 categoria: h.indexOf('CATEGORIA'),       
                 resultado: h.indexOf('ACTUALIZADO'),       
                 mesPagoH: h.indexOf('MES PAGO HASTA'),
-                tipoDeEnvio: h.indexOf('TIPO DE MENSAJE'),
+                tipoMensaje: h.indexOf('TIPO DE MENSAJE'),
                 diasPago: h.indexOf('DIAS DE PAGO'),
                 grupoAtraso: h.indexOf('ATRASO'),
                 fechaEnvio: h.indexOf('FECHA DE ENVIO')
@@ -896,8 +960,8 @@
                     categoria: columnMap.categoria !== -1 ? normalizeString(row[columnMap.categoria]) : 'SIN ASIGNAR',
                     resultado: columnMap.resultado !== -1 ? normalizeString(row[columnMap.resultado]) : 'SIN ASIGNAR',
                     fechaPago: columnMap.fechaPago !== -1 ? normalizeString(row[columnMap.fechaPago]) : '0',
-                    cuotasPagadas: (function() {
-                        let c = columnMap.cuotasPagadas !== -1 ? parseNumber(row[columnMap.cuotasPagadas]) : 0;
+                    cuotasPagadías: (function() {
+                        let c = columnMap.cuotasPagadías !== -1 ? parseNumber(row[columnMap.cuotasPagadías]) : 0;
                         if (c >= 1.3 && c < 2) return 2;
                         return c;
                     })(),
@@ -905,13 +969,299 @@
                     cuota: columnMap.cuota !== -1 ? parseNumber(row[columnMap.cuota]) : 0,
                     pagoActual: columnMap.pagoActual !== -1 ? parseNumber(row[columnMap.pagoActual]) : 0,
                     mesPagoH: columnMap.mesPagoH !== -1 ? normalizeString(row[columnMap.mesPagoH]) : '', 
-                    tipoDeEnvio: columnMap.tipoDeEnvio !== -1 ? normalizeString(row[columnMap.tipoDeEnvio]) : 'SIN ASIGNAR',
+                    tipoMensaje: columnMap.tipoMensaje !== -1 ? normalizeString(row[columnMap.tipoMensaje]) : 'SIN ASIGNAR',
                     grupoAtraso: rawGrupoAtraso,
                     esPagoEfectivo: esPagoEfectivo,
                     esPagoTardio: esPagoTardio,
                     diasPago: diasPagoNum
                 };
             });
+        }
+
+
+        
+        
+        function updateGenericPromoTab(data, tipoMensajeFiltro, containerId) {
+            const filteredData = data.filter(r => r.tipoMensaje === tipoMensajeFiltro);
+            
+            let recaudoTotal = 0;
+            let pagosTotal = 0;
+            let mensajesTotal = filteredData.length;
+            
+            const summary = {};
+            const regSummary = {};
+            const weekSummary = {};
+            
+            const grupoAtrasoStats = {};
+            let recaudo0a7 = 0;
+            let pagos0a7 = 0;
+            let recaudoMayor7 = 0;
+            let pagosMayor7 = 0;
+
+            filteredData.forEach(record => {
+                const medio = record.medioPago;
+                if (!summary[medio]) summary[medio] = { mensajes: 0, pagos: 0, recaudo: 0 };
+                summary[medio].mensajes += 1;
+                
+                const ga = record.grupoAtraso || 'SIN DATO';
+                if (!grupoAtrasoStats[ga]) grupoAtrasoStats[ga] = { mensajes: 0, pagos0a7: 0, recaudo0a7: 0, pagosMayor7: 0, recaudoMayor7: 0 };
+                grupoAtrasoStats[ga].mensajes += 1;
+                
+                if (record.pagoActual > 0) {
+                    recaudoTotal += record.pagoActual;
+                    pagosTotal += 1;
+                    summary[medio].pagos += 1;
+                    summary[medio].recaudo += record.pagoActual;
+                    
+                    const isValidPago = !isNaN(record.diasPago) && record.diasPago !== null;
+                    if (isValidPago) {
+                        if (record.diasPago <= 7) {
+                            recaudo0a7 += record.pagoActual;
+                            pagos0a7 += 1;
+                            grupoAtrasoStats[ga].pagos0a7 += 1;
+                            grupoAtrasoStats[ga].recaudo0a7 += record.pagoActual;
+                        } else {
+                            recaudoMayor7 += record.pagoActual;
+                            pagosMayor7 += 1;
+                            grupoAtrasoStats[ga].pagosMayor7 += 1;
+                            grupoAtrasoStats[ga].recaudoMayor7 += record.pagoActual;
+                        }
+                    }
+                }
+                
+                const reg = record.regional;
+                if (!regSummary[reg]) regSummary[reg] = { recaudo: 0 };
+                if (record.pagoActual > 0) regSummary[reg].recaudo += record.pagoActual;
+                
+                const dateStr = record.fechaEnvioOriginal;
+                let dateObj = null;
+                if (dateStr) {
+                    if (dateStr.includes('/')) {
+                        const parts = dateStr.split('/');
+                        if (parts.length === 3) {
+                            dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
+                        }
+                    } else if (dateStr.includes('-')) {
+                        dateObj = new Date(dateStr + 'T00:00:00');
+                    }
+                }
+                
+                let semana = 'Otra Fecha';
+                if (dateObj && !isNaN(dateObj)) {
+                    const m = dateObj.getMonth(); // 0-based
+                    const d = dateObj.getDate();
+                    if (m === 5) { // Junio
+                        if (d >= 1 && d <= 7) semana = 'Semana 1 (1 al 7)';
+                        else if (d >= 8 && d <= 14) semana = 'Semana 2 (8 al 14)';
+                        else if (d >= 15 && d <= 21) semana = 'Semana 3 (15 al 21)';
+                        else if (d >= 22 && d <= 28) semana = 'Semana 4 (22 al 28)';
+                        else if (d >= 29 && d <= 30) semana = 'Semana 5 (29 al 30)';
+                    } else if (m === 6) { // Julio
+                        if (d >= 1 && d <= 7) semana = 'Semana 1 (1 al 7)';
+                        else if (d >= 8 && d <= 14) semana = 'Semana 2 (8 al 14)';
+                        else if (d >= 15 && d <= 21) semana = 'Semana 3 (15 al 21)';
+                        else if (d >= 22 && d <= 28) semana = 'Semana 4 (22 al 28)';
+                        else if (d >= 29 && d <= 31) semana = 'Semana 5 (29 al 31)';
+                    }
+                }
+                
+                if (!weekSummary[semana]) weekSummary[semana] = { recaudo: 0, pagos0a7: 0 };
+                if (record.pagoActual > 0) {
+                    weekSummary[semana].recaudo += record.pagoActual;
+                    if (record.diasPago <= 7) {
+                        weekSummary[semana].pagos0a7 += 1;
+                    }
+                }
+            });
+            
+            let htmlTable = '';
+            Object.keys(summary).sort().forEach(medio => {
+                const item = summary[medio];
+                const efectividad = item.mensajes > 0 ? ((item.pagos / item.mensajes) * 100).toFixed(1) + '%' : '0.0%';
+                htmlTable += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-4 py-3 font-semibold text-slate-800">${medio}</td>
+                        <td class="px-4 py-3 text-center font-bold text-slate-600">${formatNumber(item.mensajes)}</td>
+                        <td class="px-4 py-3 text-center font-bold text-indigo-600">${formatNumber(item.pagos)}</td>
+                        <td class="px-4 py-3 text-center font-black text-purple-700 bg-purple-50/40">${efectividad}</td>
+                        <td class="px-4 py-3 text-right font-extrabold text-[#2b5cb3]">${formatCurrency(item.recaudo)}</td>
+                    </tr>
+                `;
+            });
+            
+            let weekHtml = '';
+            let totalWeekRecaudo = 0;
+            let totalWeekPagos0a7 = 0;
+            const sortedWeeks = Object.keys(weekSummary).sort();
+            sortedWeeks.forEach(semana => {
+                if (weekSummary[semana].recaudo === 0 && weekSummary[semana].pagos0a7 === 0) return;
+                totalWeekRecaudo += weekSummary[semana].recaudo;
+                totalWeekPagos0a7 += weekSummary[semana].pagos0a7;
+                weekHtml += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+                        <td class="px-4 py-3 font-bold text-slate-700">${semana}</td>
+                        <td class="px-4 py-3 text-center font-extrabold text-emerald-600">${formatCurrency(weekSummary[semana].recaudo)}</td>
+                        <td class="px-4 py-3 text-center font-bold text-indigo-600">${formatNumber(weekSummary[semana].pagos0a7)}</td>
+                    </tr>
+                `;
+            });
+            if (weekHtml) {
+                weekHtml += `
+                    <tr class="bg-indigo-50/50">
+                        <td class="px-4 py-3 font-black text-indigo-900 uppercase">Totales</td>
+                        <td class="px-4 py-3 text-center font-black text-emerald-700">${formatCurrency(totalWeekRecaudo)}</td>
+                        <td class="px-4 py-3 text-center font-black text-indigo-700">${formatNumber(totalWeekPagos0a7)}</td>
+                    </tr>
+                `;
+            }
+            
+            let gaHtml = '';
+            Object.keys(grupoAtrasoStats).sort().forEach(ga => {
+                const item = grupoAtrasoStats[ga];
+                gaHtml += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+                        <td class="px-3 py-3 font-semibold text-slate-800">${ga}</td>
+                        <td class="px-3 py-3 text-center font-bold text-slate-600">${formatNumber(item.mensajes)}</td>
+                        <td class="px-3 py-3 text-center font-bold text-emerald-600 bg-emerald-50/30 border-l border-emerald-50">${formatNumber(item.pagos0a7)}</td>
+                        <td class="px-3 py-3 text-right font-black text-emerald-700 bg-emerald-50/30">${formatCurrency(item.recaudo0a7)}</td>
+                        <td class="px-3 py-3 text-center font-bold text-rose-600 bg-rose-50/30 border-l border-rose-50">${formatNumber(item.pagosMayor7)}</td>
+                        <td class="px-3 py-3 text-right font-black text-rose-700 bg-rose-50/30">${formatCurrency(item.recaudoMayor7)}</td>
+                    </tr>
+                `;
+            });
+
+            const layoutHtml = `
+                <div class="mb-6">
+                    <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
+                        Mensajera ${tipoMensajeFiltro}
+                    </h2>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-xl p-5 border-l-4 border-emerald-400 shadow-sm border border-slate-100 relative overflow-hidden">
+                        <p class="text-xs font-black text-emerald-700 uppercase tracking-widest mb-1">RECAUDO TOTAL</p>
+                        <p class="text-3xl font-extrabold text-emerald-600">${formatCurrency(recaudoTotal)}</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border-l-4 border-indigo-400 shadow-sm border border-slate-100 relative overflow-hidden">
+                        <p class="text-xs font-black text-indigo-700 uppercase tracking-widest mb-1">PAGOS EFECTIVOS</p>
+                        <p class="text-3xl font-extrabold text-indigo-600">${formatNumber(pagosTotal)}</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border-l-4 border-purple-400 shadow-sm border border-slate-100 relative overflow-hidden">
+                        <p class="text-xs font-black text-purple-700 uppercase tracking-widest mb-1">MENSAJES ENVIADOS</p>
+                        <p class="text-3xl font-extrabold text-purple-600">${formatNumber(mensajesTotal)}</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Tarjeta 0 a 7 das -->
+                    <div class="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm flex flex-col relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 z-0"></div>
+                        <div class="relative z-10">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black tracking-wider uppercase shadow-sm">PAGOS ENTRE 0 A 7 DAS DESPUS DEL ENVO</span>
+                            <div class="flex justify-between items-end mt-4">
+                                <div>
+                                    <p class="text-xs text-slate-500 font-semibold mb-1">Recaudo Efectivo</p>
+                                    <p class="text-3xl font-black text-emerald-600">${formatCurrency(recaudo0a7)}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-slate-500 font-semibold mb-1">Cantidad de Pagos</p>
+                                    <p class="text-2xl font-bold text-emerald-700">${formatNumber(pagos0a7)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta > 7 das -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full opacity-50 z-0"></div>
+                        <div class="relative z-10">
+                            <span class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">PAGOS DESPUS DE 7 DAS (DATO ESTADSTICO)</span>
+                            <div class="flex justify-between items-end mt-2">
+                                <div>
+                                    <p class="text-xs text-slate-400 font-medium mb-1">Recaudo Tardo</p>
+                                    <p class="text-2xl font-bold text-slate-600">${formatCurrency(recaudoMayor7)}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-slate-400 font-medium mb-1">Cantidad de Pagos</p>
+                                    <p class="text-xl font-bold text-slate-500">${formatNumber(pagosMayor7)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
+                    <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+                        <h3 class="text-lg font-bold text-slate-800 uppercase tracking-wider">Anlisis Detallado por Grupo Atraso</h3>
+                        <p class="text-xs text-slate-500 mt-1">Desglose de envos, pagos y recaudo (Efectivo vs Tardo).</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm text-left">
+                            <thead class="bg-slate-50 text-xs text-slate-600 uppercase tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th class="px-3 py-3 font-bold">Grupo Atraso</th>
+                                    <th class="px-3 py-3 font-bold text-center">Mensajes Enviados</th>
+                                    <th class="px-3 py-3 font-bold text-center text-emerald-700 bg-emerald-50/50">Pagos (0 a 7 Das)</th>
+                                    <th class="px-3 py-3 font-bold text-right text-emerald-700 bg-emerald-50/50">Recaudo (0 a 7 Das)</th>
+                                    <th class="px-3 py-3 font-bold text-center text-rose-700 bg-rose-50/50">Pagos (> 7 Das)</th>
+                                    <th class="px-3 py-3 font-bold text-right text-rose-700 bg-rose-50/50">Recaudo (> 7 Das)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                ${gaHtml || '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Sin datos</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+                            <h3 class="text-lg font-bold text-slate-800 uppercase tracking-wider">Resultados por Semana</h3>
+                            <p class="text-xs text-slate-500 mt-1">Calculado en base a la Fecha de Envo.</p>
+                        </div>
+                        <div class="overflow-x-auto p-4">
+                            <table class="min-w-full text-sm text-left">
+                                <thead class="bg-slate-50 text-xs text-slate-600 uppercase tracking-wider">
+                                    <tr>
+                                        <th class="px-4 py-2 font-bold">Semana</th>
+                                        <th class="px-4 py-2 font-bold text-center">Recaudo Semanal</th>
+                                        <th class="px-4 py-2 font-bold text-center">Pagos (0 a 7 das)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${weekHtml || '<tr><td colspan="3" class="px-4 py-6 text-center text-slate-400">No hay datos por semana</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+                            <h3 class="text-lg font-bold text-slate-800 uppercase tracking-wider">Resultados por Medio de Pago</h3>
+                            <p class="text-xs text-slate-500 mt-1">Resumen de conversin segn plataforma de pago.</p>
+                        </div>
+                        <div class="overflow-x-auto p-4">
+                            <table class="min-w-full text-sm text-left">
+                                <thead class="bg-slate-50 text-xs text-slate-600 uppercase tracking-wider">
+                                    <tr>
+                                        <th class="px-4 py-2 font-bold">Medio</th>
+                                        <th class="px-4 py-2 font-bold text-center">Msj</th>
+                                        <th class="px-4 py-2 font-bold text-center">Pagos</th>
+                                        <th class="px-4 py-2 font-bold text-center">Conv.</th>
+                                        <th class="px-4 py-2 font-bold text-right">Recaudo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${htmlTable || '<tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Sin datos de medio de pago</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById(containerId).innerHTML = layoutHtml;
         }
 
 
@@ -1021,13 +1371,20 @@
 
                 if (record.pagoActual > 0 && fEnvio) {
                     let sem = 'Otra Fecha';
-                    if (fEnvio.getMonth() === 5) {
+                    if (fEnvio.getMonth() === 5) { // Junio
                         const day = fEnvio.getDate();
                         if (day <= 7) sem = 'Semana 1 (1 al 7)';
                         else if (day <= 14) sem = 'Semana 2 (8 al 14)';
                         else if (day <= 21) sem = 'Semana 3 (15 al 21)';
                         else if (day <= 28) sem = 'Semana 4 (22 al 28)';
                         else sem = 'Semana 5 (29 al 30)';
+                    } else if (fEnvio.getMonth() === 6) { // Julio
+                        const day = fEnvio.getDate();
+                        if (day <= 7) sem = 'Semana 1 (1 al 7)';
+                        else if (day <= 14) sem = 'Semana 2 (8 al 14)';
+                        else if (day <= 21) sem = 'Semana 3 (15 al 21)';
+                        else if (day <= 28) sem = 'Semana 4 (22 al 28)';
+                        else sem = 'Semana 5 (29 al 31)';
                     }
                     if (kpis.semanasJunio && kpis.semanasJunio[sem]) {
                         if (record.esPagoEfectivo) {
@@ -1042,7 +1399,7 @@
 
                 const isValidPago = !isNaN(record.diasPago) && record.diasPago >= 0;
 
-                if (record.cuotasPagadas >= 2) {
+                if (record.cuotasPagadías >= 2) {
                     if (record.esPagoEfectivo) kpis.recaudoMayorIgualDosCuotas += record.pagoActual;
                     if (esActualizado && isValidPago) {
                         kpis.recaudoActualizadosMasDos += record.pagoActual;
@@ -1073,7 +1430,7 @@
                         timeline[fRaw].mensajesSegmento += 1;
                         if (record.pagoActual > 0) timeline[fRaw].pagosSegmento += 1;
                     }
-                    if (record.cuotasPagadas >= 2 && record.esPagoEfectivo) {
+                    if (record.cuotasPagadías >= 2 && record.esPagoEfectivo) {
                         timeline[fRaw].recaudoEsp += record.pagoActual;
                     }
                 }
@@ -1085,7 +1442,7 @@
                 return new Date(partsA[2], partsA[1] - 1, partsA[0]) - new Date(partsB[2], partsB[1] - 1, partsB[0]);
             });
 
-            kpis.fechasOrdenadas = sortingFechas;
+            kpis.fechasOrdenadías = sortingFechas;
             sortingFechas.forEach(f => {
                 kpis.recLinealChart[f] = timeline[f].recaudo;
             });
@@ -1182,7 +1539,7 @@
                         temporalAdelantados[f] = (temporalAdelantados[f] || 0) + record.pagoActual;
                     }
 
-                    if (record.cuotasPagadas >= 2) {
+                    if (record.cuotasPagadías >= 2) {
                         kpis.recaudoMasDos += record.pagoActual;
                         if (record.esPagoEfectivo) kpis.recaudoMasDos0a7 += record.pagoActual;
                         else if (record.esPagoTardio) kpis.recaudoMasDosMayor7 += record.pagoActual;
@@ -1417,7 +1774,7 @@
             });
 
             data.forEach(record => {
-                if (record.cuotasPagadas >= 2 && record.esPagoEfectivo) {
+                if (record.cuotasPagadías >= 2 && record.esPagoEfectivo) {
                     const cat = record.categoria;
                     if (!catSummary[cat]) catSummary[cat] = { count: 0, total: 0 };
                     catSummary[cat].count += 1;
@@ -1508,7 +1865,7 @@
 
                 const esActualizado = record.resultado === 'ACTUALIZADO';
                 
-                if (record.cuotasPagadas >= 2) {
+                if (record.cuotasPagadías >= 2) {
                     summary[medio].recaudoMasDos += record.pagoActual;
                     if (esActualizado) summary[medio].actMasDos += 1;
                 } else {
@@ -1648,7 +2005,7 @@
             
             // Group by week for the chart
             const weekData = {};
-            kpis.fechasOrdenadas.forEach(f => {
+            kpis.fechasOrdenadías.forEach(f => {
                 const parts = f.split('/');
                 if (parts.length === 3) {
                     const date = new Date(parts[2], parts[1] - 1, parts[0]);
@@ -1798,6 +2155,83 @@
             createFunnelChart('chartEmbudo', kpis.totalMensajes, kpis.totalPagos);
         }
 
+        
+        function loadPromoJulioData() {
+            const ts = new Date().getTime();
+            const baseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSYgitljjICa1hyaX1iOrAsjg-RFyM8ruiRDuww6mBL1CRalpXu06l8b-3rQvOofdz4MIXX7PmHymam/pub?output=csv';
+            const urlPromoJulio = baseUrl + '&single=true&gid=126771446&t=' + ts;
+
+            Papa.parse(urlPromoJulio, {
+                download: true, header: false, skipEmptyLines: true,
+                complete: function(results) {
+                    try {
+                        if (results.data.length === 0) return;
+                        const allRows = results.data;
+                        const headers = allRows[0];
+                        const dataRows = allRows.slice(1);
+                        const columnMap = mapColumns(headers);
+                        
+                        const promoJulioData = processData(dataRows, columnMap);
+                        
+                        updateGenericPromoTab(promoJulioData, 'COBRO MORA', 'contentCobroMora');
+                        updateGenericPromoTab(promoJulioData, 'RENOVACION SEMESTRE', 'contentRenovacion');
+
+                    } catch (e) {
+                        console.error('Error procesando promo Julio:', e);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error cargando CSV promo Julio:', error);
+                }
+            });
+        }
+
+        function updatePromoJulioUI(data) {
+            const grouped = {};
+            data.forEach(record => {
+                const tipo = record.tipoMensaje || 'Sin Tipo';
+                if (!grouped[tipo]) {
+                    grouped[tipo] = { count: 0, pagos: 0, recaudo: 0, sumaCuotas: 0, sumaDias: 0 };
+                }
+                grouped[tipo].count++;
+                if (record.pagoActual > 0) {
+                    grouped[tipo].pagos++;
+                    grouped[tipo].recaudo += record.pagoActual;
+                    grouped[tipo].sumaCuotas += record.cuotasPagadas;
+                    if (!isNaN(record.diasPagoNum)) {
+                        grouped[tipo].sumaDias += record.diasPagoNum;
+                    }
+                }
+            });
+
+            const tbody = document.getElementById('tablaPromoJulioBody');
+            if (!tbody) return;
+            
+            let htmlStr = '';
+            for (const [tipo, stats] of Object.entries(grouped)) {
+                const cvr = stats.count > 0 ? ((stats.pagos / stats.count) * 100).toFixed(2) + '%' : '0%';
+                const promCuotas = stats.pagos > 0 ? (stats.sumaCuotas / stats.pagos).toFixed(1) : '0';
+                const promDias = stats.pagos > 0 ? (stats.sumaDias / stats.pagos).toFixed(1) : '0';
+                
+                htmlStr += `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100/50">
+                        <td class="px-3 py-3 font-semibold text-slate-700">${tipo}</td>
+                        <td class="px-3 py-3 text-right font-black text-emerald-600">${formatCurrency(stats.recaudo)}</td>
+                        <td class="px-3 py-3 text-center font-bold text-slate-700">${formatNumber(stats.pagos)} / ${formatNumber(stats.count)}</td>
+                        <td class="px-3 py-3 text-center font-bold text-indigo-600">${cvr}</td>
+                        <td class="px-3 py-3 text-center text-slate-600">${promCuotas}</td>
+                        <td class="px-3 py-3 text-center text-slate-600">${promDias}</td>
+                    </tr>
+                `;
+            }
+
+            if (Object.keys(grouped).length === 0) {
+                htmlStr = '<tr><td colspan="6" class="text-center py-4 text-slate-500">No hay datos de promociones de Julio</td></tr>';
+            }
+
+            tbody.innerHTML = htmlStr;
+        }
+
         function loadPromo15Data() {
             const ts = new Date().getTime();
             const baseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSYgitljjICa1hyaX1iOrAsjg-RFyM8ruiRDuww6mBL1CRalpXu06l8b-3rQvOofdz4MIXX7PmHymam/pub?output=csv';
@@ -1841,7 +2275,7 @@
             data.forEach(record => {
                 totalQuinceGlobal += 1;
 
-                if (record.cuotasPagadas >= 2) {
+                if (record.cuotasPagadías >= 2) {
                     recaudoQuinceMasDos += record.pagoActual;
                 } else {
                     recaudoQuinceMenosDos += record.pagoActual;
@@ -1851,7 +2285,7 @@
                 if (!summary15[medio]) summary15[medio] = { mensajes: 0, actMasDos: 0, recaudoMasDos: 0, actMenosDos: 0, recaudoMenosDos: 0 };
                 summary15[medio].mensajes += 1;
                 
-                if (record.cuotasPagadas >= 2) {
+                if (record.cuotasPagadías >= 2) {
                     summary15[medio].recaudoMasDos += record.pagoActual;
                     summary15[medio].actMasDos += 1;
                 } else {
@@ -1927,12 +2361,23 @@
                         updateKPIs(kpis);
                         hideLoading();
 
-                        // Una vez cargados los datos principales, cargamos el 15%
-                        loadPromo15Data();
+                                                // Una vez cargados los datos principales, cargamos las promos correspondientes
+                        const monthEl = document.getElementById('monthSelect');
+                        const isJulio = monthEl && monthEl.value === '126771446';
+                        if (isJulio) {
+                            loadPromoJulioData();
+                        } else {
+                            loadPromo15Data();
+                        }
                     } catch (e) {
-                        console.error('Error:', e);
+                                                console.error('Error:', e);
                         hideLoading();
-                        loadPromo15Data(); // Intentar cargar el 15% de todos modos
+                        const isJulio = document.getElementById('monthSelect') && document.getElementById('monthSelect').value === '126771446';
+                        if (isJulio) {
+                            loadPromoJulioData();
+                        } else {
+                            loadPromo15Data();
+                        } // Intentar cargar el 15% de todos modos
                     }
                 },
                 error: function(error) {
@@ -1947,7 +2392,19 @@
             document.getElementById('dashboard').classList.remove('hidden');
         }
 
-        document.addEventListener('DOMContentLoaded', loadData);
+                document.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('monthSelect')) {
+                changeMonth();
+            } else {
+                loadData();
+            }
+        });
     </script>
+
+            
+
+            
+
+        
 </body>
 </html>
